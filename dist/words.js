@@ -1,0 +1,22 @@
+export const WORDS=[
+  {word:'brave',phonetic:'/breɪv/',answer:'dũng cảm',aliases:['can đảm','gan dạ']},
+  {word:'gentle',phonetic:'/ˈdʒen.təl/',answer:'dịu dàng',aliases:['nhẹ nhàng','hiền lành']},
+  {word:'curious',phonetic:'/ˈkjʊə.ri.əs/',answer:'tò mò',aliases:['hiếu kỳ']},
+  {word:'grateful',phonetic:'/ˈɡreɪt.fəl/',answer:'biết ơn',aliases:['cảm kích']},
+  {word:'patient',phonetic:'/ˈpeɪ.ʃənt/',answer:'kiên nhẫn',aliases:['nhẫn nại']},
+  {word:'honest',phonetic:'/ˈɒn.ɪst/',answer:'trung thực',aliases:['thật thà']},
+  {word:'peaceful',phonetic:'/ˈpiːs.fəl/',answer:'yên bình',aliases:['thanh bình']},
+  {word:'improve',phonetic:'/ɪmˈpruːv/',answer:'cải thiện',aliases:['cải tiến']},
+  {word:'achieve',phonetic:'/əˈtʃiːv/',answer:'đạt được',aliases:['đạt tới']},
+  {word:'challenge',phonetic:'/ˈtʃæl.ɪndʒ/',answer:'thử thách',aliases:['thách thức']},
+  {word:'discover',phonetic:'/dɪˈskʌv.ər/',answer:'khám phá',aliases:['phát hiện']},
+  {word:'promise',phonetic:'/ˈprɒm.ɪs/',answer:'lời hứa',aliases:['hứa hẹn']},
+  {word:'journey',phonetic:'/ˈdʒɜː.ni/',answer:'hành trình',aliases:['chuyến đi']},
+  {word:'opportunity',phonetic:'/ˌɒp.əˈtjuː.nə.ti/',answer:'cơ hội',aliases:[]},
+  {word:'confidence',phonetic:'/ˈkɒn.fɪ.dəns/',answer:'tự tin',aliases:['sự tự tin']},
+  {word:'kindness',phonetic:'/ˈkaɪnd.nəs/',answer:'lòng tốt',aliases:['tử tế']},
+  {word:'creative',phonetic:'/kriˈeɪ.tɪv/',answer:'sáng tạo',aliases:[]},
+  {word:'balance',phonetic:'/ˈbæl.əns/',answer:'cân bằng',aliases:[]},
+  {word:'memory',phonetic:'/ˈmem.ər.i/',answer:'ký ức',aliases:['trí nhớ']},
+  {word:'wonderful',phonetic:'/ˈwʌn.də.fəl/',answer:'tuyệt vời',aliases:[]}
+];
