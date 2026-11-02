@@ -32,7 +32,7 @@ function chat(id, name, message) {
     leaders[id].score++;
   }
   comments.unshift({ name, message, correct });
-  comments = comments.slice(0, 5);
+  comments = comments.slice(0, 7);
   count++;
   send({ type: 'chat', name, message, correct, leaders, count });
 }
