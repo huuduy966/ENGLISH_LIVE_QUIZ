@@ -2,6 +2,8 @@
 
 Trang dọc dành cho TikTok LIVE. Người xem bình luận nghĩa tiếng Việt của từ tiếng Anh; mỗi người được một điểm cho mỗi vòng trả lời đúng. Cầu nối giữ vòng chơi và bảng xếp hạng đồng bộ giữa trang điều khiển và trang hiển thị.
 
+Bộ 124 từ dùng các mục tiếng Anh, nghĩa tiếng Việt và phiên âm từ [minhqnd/dictionary](https://github.com/minhqnd/dictionary). Xem [DATA-LICENSE.md](DATA-LICENSE.md) để biết nguồn và giấy phép dữ liệu. Để tạo lại danh sách từ, tải `dictionary.db` của bản phát hành v2.0.0 rồi chạy `python tools/build_dictionary.py đường-dẫn-dictionary.db`.
+
 ## Chạy trên máy phát stream
 
 1. Cài Node.js 20 trở lên.
