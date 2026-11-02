@@ -44,18 +44,23 @@
     .medal:first-child .rank{background:#E0EDD6;color:#466D47}
     .comment .avatar{background:#E4EEE0;color:#577451}
     .host input{background:#FCFDF9}
-    .sound-toggle{display:grid;place-items:center;flex:none;min-width:70px;height:30px;padding:0 8px;border:1px solid #C7D8C1;border-radius:99px;background:#EEF4E9;color:#52735A;font-size:10px;font-weight:700;transition:background-color .2s,transform .2s}
+    .eyebrow{margin-top:28px}
+    .sound-toggle{position:absolute;z-index:3;top:14px;left:22px;display:grid;place-items:center;width:38px;height:38px;padding:0;border:1px solid #C7D8C1;border-radius:50%;background:#EEF4E9;color:#52735A;transition:background-color .2s,transform .2s}
     .sound-toggle.on{background:#426B4D;color:white;border-color:#426B4D}
+    .sound-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .sound-toggle:not(.on) .sound-on,.sound-toggle.on .sound-off{display:none}
     .sound-toggle:active{transform:scale(.92)}
     .sound-toggle:focus-visible{outline:2px solid #426B4D;outline-offset:3px}
+    @media(max-width:370px){.sound-toggle{left:15px}}
   </style>
 </head>
 <body>
 <main class="app">
+  <button id="sound" class="sound-toggle" type="button" aria-label="Bật âm thanh" aria-pressed="false" title="Bật âm thanh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path class="sound-on" d="M15 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/><path class="sound-off" d="m16 10 4 4m0-4-4 4"/></svg></button>
   <p class="eyebrow">ENGLISH WORD CHALLENGE</p>
   <section class="word-zone" aria-live="polite"><span class="flower" aria-hidden="true">✳</span><h1 id="word" class="word">brave</h1><p id="phonetic" class="phonetic">/breɪv/</p></section>
   <p class="answer-label">ĐÁP ÁN</p><div id="tiles" class="tiles" aria-label="Các ô đáp án"></div><p id="prompt" class="prompt">Bạn biết từ này nghĩa là gì?</p>
-  <div class="timer" aria-label="Thời gian còn lại"><span id="seconds" class="timer-count">15s</span><span class="timer-track"><span id="progress" class="timer-progress"></span></span><button id="sound" class="sound-toggle" type="button" aria-label="Bật âm thanh" aria-pressed="false" title="Bật âm thanh">Bật tiếng</button></div>
+  <div class="timer" aria-label="Thời gian còn lại"><span id="seconds" class="timer-count">15s</span><span class="timer-track"><span id="progress" class="timer-progress"></span></span></div>
   <div class="activity"><section class="column"><div class="section-head"><span class="section-title">🏆 BẢNG XẾP HẠNG</span></div><div id="leaders"></div></section><section class="column"><div class="section-head"><span class="section-title">BÌNH LUẬN</span><span id="comment-count" class="count">0</span></div><div id="comments"></div></section></div>
   <div id="win" class="win" role="status"><strong>✨ Chính xác!</strong><span id="winner"></span></div>
   <details id="host" class="host"><summary>Điều khiển cho chủ phòng</summary><div class="host-inner"><div class="host-row actions"><button id="reveal" type="button">Hiện đáp án</button><button id="next" type="button">Từ tiếp →</button></div><div class="host-row"><input id="username" autocomplete="off" placeholder="TikTok username, ví dụ @tenkenh" aria-label="TikTok username"><button id="connect" type="button">Kết nối</button></div><div class="host-row"><input id="tester" autocomplete="off" placeholder="Nhập bình luận để thử" aria-label="Bình luận thử"><button id="send" type="button">Gửi thử</button></div><p id="host-help" class="host-help">Mở bằng cầu nối trên máy livestream để nhận bình luận TikTok LIVE.</p><p class="host-credit">Từ điển: <a href="https://dict.minhqnd.com" target="_blank" rel="noopener">@minhqnd</a> · CC BY-SA 4.0</p></div></details>
@@ -83,7 +88,7 @@ async function ting(){if(!soundEnabled||Date.now()-lastTing<2000)return;lastTing
 function submit(name,message,id=name){name=String(name||'Khách').slice(0,35);message=String(message||'').slice(0,180).trim();if(!message)return;id=String(id||name);let valid=[current.answer,...current.aliases].some(a=>normalize(a)===normalize(message));let correct=valid&&!answered.has(id)&&!shown&&Date.now()-startedAt<ROUND_MS;if(correct){answered.add(id);leaders[id]??={name,score:0};leaders[id].name=name;leaders[id].score++;localStorage.setItem('wordlive-leaders',JSON.stringify(leaders));ting();$('winner').textContent=name+' +1 điểm';$('win').classList.add('show');setTimeout(()=>$('win').classList.remove('show'),2500);renderLeaders()}comments.unshift({name,message,correct});count++;renderComments(true)}
 function incoming(data){leaders=data.leaders;comments.unshift({name:data.name,message:data.message,correct:data.correct});count=data.count;if(data.correct){ting();$('winner').textContent=data.name+' +1 điểm';$('win').classList.add('show');setTimeout(()=>$('win').classList.remove('show'),2500)}renderLeaders();renderComments(true)}
 const post=(path,data)=>fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)}).catch(e=>{$('host-help').textContent=e.message});
-$('sound').onclick=async()=>{if(soundEnabled){soundEnabled=false;await audio?.suspend().catch(()=>{})}else{try{audio??=new (window.AudioContext||window.webkitAudioContext)();await audio.resume();soundEnabled=audio.state==='running'}catch{soundEnabled=false}}$('sound').classList.toggle('on',soundEnabled);$('sound').setAttribute('aria-pressed',String(soundEnabled));$('sound').setAttribute('aria-label',soundEnabled?'Tắt âm thanh':'Bật âm thanh');$('sound').title=soundEnabled?'Tắt âm thanh':'Bật âm thanh';$('sound').textContent=soundEnabled?'Tắt tiếng':'Bật tiếng'};
+$('sound').onclick=async()=>{if(soundEnabled){soundEnabled=false;await audio?.suspend().catch(()=>{})}else{try{audio??=new (window.AudioContext||window.webkitAudioContext)();await audio.resume();soundEnabled=audio.state==='running'}catch{soundEnabled=false}}$('sound').classList.toggle('on',soundEnabled);$('sound').setAttribute('aria-pressed',String(soundEnabled));$('sound').setAttribute('aria-label',soundEnabled?'Tắt âm thanh':'Bật âm thanh');$('sound').title=soundEnabled?'Tắt âm thanh':'Bật âm thanh'};
 $('next').onclick=()=>{if(serverMode)post('/api/action',{action:'next'});else nextLocal()};
 $('reveal').onclick=()=>{if(serverMode)post('/api/action',{action:'reveal'});else revealLocal()};
 $('send').onclick=()=>{let message=$('tester').value;if(serverMode)post('/api/test',{message});else submit('Bạn (thử)',message,'test');$('tester').value=''};
