@@ -4,6 +4,7 @@ import { TikTokLiveConnection, WebcastEvent } from 'tiktok-live-connector';
 import { WORDS } from './dist/words.js';
 
 const port = Number(process.env.PORT || 3000);
+const ROUND_MS = 15000;
 const clients = new Set();
 let connection;
 let username = '';
@@ -11,12 +12,25 @@ let connected = false;
 let wordIndex = Math.floor(Math.random() * WORDS.length);
 let round = 1;
 let shown = false;
+let startedAt = Date.now();
 let leaders = {};
 let answered = new Set();
 let comments = [];
 let count = 0;
 const normalize = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-const game = () => ({ type: 'game', wordIndex, round, shown, leaders, comments, count });
+const game = () => ({ type: 'game', wordIndex, round, shown, startedAt, leaders, comments, count });
+
+function nextRound() {
+  const previous = wordIndex;
+  while (wordIndex === previous) wordIndex = Math.floor(Math.random() * WORDS.length);
+  round++;
+  shown = false;
+  startedAt = Date.now();
+  answered = new Set();
+  send(game());
+}
+
+setInterval(() => { if (Date.now() - startedAt >= ROUND_MS) nextRound(); }, 100);
 
 function chat(id, name, message) {
   id = String(id || name).slice(0, 80);
@@ -24,7 +38,7 @@ function chat(id, name, message) {
   message = String(message || '').slice(0, 180).trim();
   if (!message) return;
   const word = WORDS[wordIndex];
-  const correct = !shown && !answered.has(id) && [word.answer, ...word.aliases].some(a => normalize(a) === normalize(message));
+  const correct = !shown && Date.now() - startedAt < ROUND_MS && !answered.has(id) && [word.answer, ...word.aliases].some(a => normalize(a) === normalize(message));
   if (correct) {
     answered.add(id);
     leaders[id] ??= { name, score: 0 };
@@ -86,14 +100,9 @@ createServer(async (req, res) => {
     try {
       const { action } = JSON.parse(body);
       if (action === 'next') {
-        const previous = wordIndex;
-        while (wordIndex === previous) wordIndex = Math.floor(Math.random() * WORDS.length);
-        round++;
-        shown = false;
-        answered = new Set();
-      } else if (action === 'reveal') shown = true;
+        nextRound();
+      } else if (action === 'reveal') { shown = true; send(game()); }
       else throw new Error('Thao tác không hợp lệ');
-      send(game());
       res.writeHead(200, { 'content-type': 'application/json' }).end('{"ok":true}');
     } catch (error) {
       res.writeHead(400, { 'content-type': 'application/json' }).end(JSON.stringify({ error: error.message }));
