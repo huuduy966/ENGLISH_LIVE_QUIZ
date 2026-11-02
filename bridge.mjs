@@ -1,12 +1,19 @@
 import { createServer } from 'node:http';
+import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { TikTokLiveConnection, WebcastEvent } from 'tiktok-live-connector';
 import { WORDS } from './dist/words.js';
 
 const port = Number(process.env.PORT || 3000);
+const relayPort = Number(process.env.RELAY_PORT || 3002);
+const siteOrigin = 'https://english-live-quiz-20261102.comfymound1.chatgpt.site';
+const viewerOrigins = new Set([siteOrigin, 'http://127.0.0.1:3001']);
 const ROUND_MS = 15000;
 const REVEAL_MS = 5000;
 const clients = new Set();
+let tunnel;
+let tunnelUrl = '';
+let tunnelStarting;
 let connection;
 let username = '';
 let connected = false;
@@ -20,7 +27,7 @@ let answered = new Set();
 let comments = [];
 let count = 0;
 const normalize = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-const game = () => ({ type: 'game', wordIndex, round, shown, startedAt, revealedAt, leaders, comments, count });
+const game = () => ({ type: 'game', wordIndex, round, shown, startedAt, revealedAt, leaders, comments, count, serverTime: Date.now() });
 
 function nextRound() {
   const previous = wordIndex;
@@ -73,6 +80,54 @@ function send(event) {
   for (const client of clients) client.write(`data: ${JSON.stringify(event)}\n\n`);
 }
 
+function serveEvents(req, res, headers = {}) {
+  res.writeHead(200, { 'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-cache', connection: 'keep-alive', ...headers });
+  clients.add(res);
+  res.write(`data: ${JSON.stringify({ type: 'status', connected, message: username ? `@${username}${connected ? ' đang nhận bình luận' : ' đang chờ LIVE'}` : 'Nhập username TikTok để kết nối LIVE.' })}\n\n`);
+  res.write(`data: ${JSON.stringify(game())}\n\n`);
+  req.on('close', () => clients.delete(res));
+}
+
+function startTunnel() {
+  if (tunnelUrl) return Promise.resolve(tunnelUrl);
+  if (tunnelStarting) return tunnelStarting;
+  tunnelStarting = new Promise((resolve, reject) => {
+    const child = spawn('cloudflared', ['tunnel', '--no-autoupdate', '--url', `http://127.0.0.1:${relayPort}`], { windowsHide: true });
+    tunnel = child;
+    let settled = false;
+    let log = '';
+    const timeout = setTimeout(() => fail(new Error('Không tạo được link đồng bộ trong 30 giây.')), 30000);
+    function fail(error) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      child.kill();
+      tunnel = undefined;
+      reject(error);
+    }
+    function output(chunk) {
+      log = (log + String(chunk)).slice(-4096);
+      const match = log.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
+      if (!match || settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      tunnelUrl = match[0];
+      resolve(tunnelUrl);
+    }
+    child.stdout.on('data', output);
+    child.stderr.on('data', output);
+    child.once('error', fail);
+    child.once('exit', code => {
+      tunnel = undefined;
+      tunnelUrl = '';
+      if (!settled) fail(new Error(`Cầu nối màn hình đã dừng (${code}).`));
+    });
+  });
+  tunnelStarting.then(() => { tunnelStarting = undefined; }, () => { tunnelStarting = undefined; });
+  return tunnelStarting;
+}
+process.on('exit', () => tunnel?.kill());
+
 async function connect(name) {
   if (!/^[\w.]{2,32}$/.test(name)) throw new Error('Username TikTok không hợp lệ');
   if (connection) await connection.disconnect().catch(() => {});
@@ -107,11 +162,17 @@ async function connect(name) {
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   if (url.pathname === '/api/events') {
-    res.writeHead(200, { 'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-cache', connection: 'keep-alive' });
-    clients.add(res);
-    res.write(`data: ${JSON.stringify({ type: 'status', connected, message: username ? `@${username}${connected ? ' đang nhận bình luận' : ' đang chờ LIVE'}` : 'Nhập username TikTok để kết nối LIVE.' })}\n\n`);
-    res.write(`data: ${JSON.stringify(game())}\n\n`);
-    req.on('close', () => clients.delete(res));
+    serveEvents(req, res);
+    return;
+  }
+  if (url.pathname === '/api/share' && req.method === 'POST') {
+    if (req.headers.origin && req.headers.origin !== `http://127.0.0.1:${port}`) { res.writeHead(403).end(); return; }
+    try {
+      const url = await startTunnel();
+      res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ url }));
+    } catch (error) {
+      res.writeHead(503, { 'content-type': 'application/json' }).end(JSON.stringify({ error: error.message }));
+    }
     return;
   }
   if (url.pathname === '/api/action' && req.method === 'POST') {
@@ -166,3 +227,16 @@ createServer(async (req, res) => {
   }
   res.writeHead(404).end();
 }).listen(port, '127.0.0.1', () => console.log(`English Live Quiz: http://127.0.0.1:${port}`));
+
+createServer((req, res) => {
+  if (req.url === '/api/state' && req.method === 'GET') {
+    const origin = viewerOrigins.has(req.headers.origin) ? req.headers.origin : siteOrigin;
+    res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', 'access-control-allow-origin': origin, vary: 'Origin', 'x-content-type-options': 'nosniff' }).end(JSON.stringify(game()));
+    return;
+  }
+  if (req.url === '/api/health' && req.method === 'GET') {
+    res.writeHead(200, { 'content-type': 'text/plain' }).end('ok');
+    return;
+  }
+  res.writeHead(404).end();
+}).listen(relayPort, '127.0.0.1');
