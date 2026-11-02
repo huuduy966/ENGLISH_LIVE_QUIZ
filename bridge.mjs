@@ -5,6 +5,7 @@ import { WORDS } from './dist/words.js';
 
 const port = Number(process.env.PORT || 3000);
 const ROUND_MS = 15000;
+const REVEAL_MS = 5000;
 const clients = new Set();
 let connection;
 let username = '';
@@ -13,24 +14,39 @@ let wordIndex = Math.floor(Math.random() * WORDS.length);
 let round = 1;
 let shown = false;
 let startedAt = Date.now();
+let revealedAt = null;
 let leaders = {};
 let answered = new Set();
 let comments = [];
 let count = 0;
 const normalize = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-const game = () => ({ type: 'game', wordIndex, round, shown, startedAt, leaders, comments, count });
+const game = () => ({ type: 'game', wordIndex, round, shown, startedAt, revealedAt, leaders, comments, count });
 
 function nextRound() {
   const previous = wordIndex;
   while (wordIndex === previous) wordIndex = Math.floor(Math.random() * WORDS.length);
   round++;
   shown = false;
+  revealedAt = null;
   startedAt = Date.now();
   answered = new Set();
   send(game());
 }
 
-setInterval(() => { if (Date.now() - startedAt >= ROUND_MS) nextRound(); }, 100);
+function revealRound() {
+  if (shown) return;
+  shown = true;
+  revealedAt = Date.now();
+  send(game());
+}
+
+setInterval(() => {
+  if (shown && Date.now() - revealedAt >= REVEAL_MS) nextRound();
+  else if (!shown && Date.now() - startedAt >= ROUND_MS) {
+    if (answered.size === 0) revealRound();
+    else nextRound();
+  }
+}, 100);
 
 function chat(id, name, message) {
   id = String(id || name).slice(0, 80);
@@ -101,7 +117,7 @@ createServer(async (req, res) => {
       const { action } = JSON.parse(body);
       if (action === 'next') {
         nextRound();
-      } else if (action === 'reveal') { shown = true; send(game()); }
+      } else if (action === 'reveal') revealRound();
       else throw new Error('Thao tác không hợp lệ');
       res.writeHead(200, { 'content-type': 'application/json' }).end('{"ok":true}');
     } catch (error) {
