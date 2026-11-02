@@ -27,7 +27,7 @@ let answered = new Set();
 let comments = [];
 let count = 0;
 const normalize = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-const game = () => ({ type: 'game', wordIndex, round, shown, startedAt, revealedAt, leaders, comments, count, serverTime: Date.now() });
+const game = () => ({ type: 'game', wordIndex, round, shown, startedAt, revealedAt, leaders, comments, count, username, connected, serverTime: Date.now() });
 
 function nextRound() {
   const previous = wordIndex;
@@ -159,14 +159,43 @@ async function connect(name) {
   }
 }
 
+async function usernameFromTikTokLink(link) {
+  let url;
+  try { url = new URL(link); } catch { throw new Error('Link TikTok không hợp lệ'); }
+  const hosts = new Set(['tiktok.com', 'www.tiktok.com', 'm.tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com']);
+  for (let i = 0; i < 5; i++) {
+    if (url.protocol !== 'https:' || !hosts.has(url.hostname)) throw new Error('Hãy dùng link livestream TikTok');
+    const match = url.pathname.match(/^\/@([\w.]{2,32})\/live\/?$/i);
+    if (match) return match[1];
+    if (i === 4) break;
+    let response;
+    try { response = await fetch(url, { method: 'HEAD', redirect: 'manual', signal: AbortSignal.timeout(5000) }); }
+    catch { break; }
+    const location = response.headers.get('location');
+    if (!location) break;
+    url = new URL(location, url);
+  }
+  throw new Error('Không tìm thấy username. Hãy dùng link dạng tiktok.com/@tenkenh/live');
+}
+
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
+  const siteCors = req.headers.origin === siteOrigin && ['/api/connect', '/api/share'].includes(url.pathname);
+  if (siteCors) {
+    res.setHeader('access-control-allow-origin', siteOrigin);
+    res.setHeader('vary', 'Origin');
+    res.setHeader('access-control-allow-private-network', 'true');
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, { 'access-control-allow-methods': 'POST', 'access-control-allow-headers': 'content-type' }).end();
+      return;
+    }
+  }
   if (url.pathname === '/api/events') {
     serveEvents(req, res);
     return;
   }
   if (url.pathname === '/api/share' && req.method === 'POST') {
-    if (req.headers.origin && req.headers.origin !== `http://127.0.0.1:${port}`) { res.writeHead(403).end(); return; }
+    if (req.headers.origin && req.headers.origin !== `http://127.0.0.1:${port}` && req.headers.origin !== siteOrigin) { res.writeHead(403).end(); return; }
     try {
       const url = await startTunnel();
       res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ url }));
@@ -202,15 +231,17 @@ createServer(async (req, res) => {
     return;
   }
   if (url.pathname === '/api/connect' && req.method === 'POST') {
+    if (req.headers.origin && req.headers.origin !== `http://127.0.0.1:${port}` && req.headers.origin !== siteOrigin) { res.writeHead(403).end(); return; }
     let body = '';
     for await (const chunk of req) {
       body += chunk;
       if (body.length > 1024) { res.writeHead(413).end(); return; }
     }
     try {
-      const name = String(JSON.parse(body).username || '').replace(/^@/, '').trim();
+      const input = JSON.parse(body);
+      const name = input.link ? await usernameFromTikTokLink(input.link) : String(input.username || '').replace(/^@/, '').trim();
       if (!/^[\w.]{2,32}$/.test(name)) throw new Error('Username TikTok không hợp lệ');
-      res.writeHead(202, { 'content-type': 'application/json' }).end(JSON.stringify({ ok: true }));
+      res.writeHead(202, { 'content-type': 'application/json' }).end(JSON.stringify({ ok: true, username: name }));
       connect(name).catch(error => send({ type: 'status', connected: false, message: error.message }));
     } catch (error) {
       res.writeHead(400, { 'content-type': 'application/json' }).end(JSON.stringify({ error: error.message }));
