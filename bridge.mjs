@@ -228,14 +228,23 @@ createServer(async (req, res) => {
   res.writeHead(404).end();
 }).listen(port, '127.0.0.1', () => console.log(`English Live Quiz: http://127.0.0.1:${port}`));
 
-createServer((req, res) => {
-  if (req.url === '/api/state' && req.method === 'GET') {
+createServer(async (req, res) => {
+  const pathname = new URL(req.url, `http://${req.headers.host}`).pathname;
+  if (pathname === '/api/state' && req.method === 'GET') {
     const origin = viewerOrigins.has(req.headers.origin) ? req.headers.origin : siteOrigin;
     res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', 'access-control-allow-origin': origin, vary: 'Origin', 'x-content-type-options': 'nosniff' }).end(JSON.stringify(game()));
     return;
   }
-  if (req.url === '/api/health' && req.method === 'GET') {
+  if (pathname === '/api/health' && req.method === 'GET') {
     res.writeHead(200, { 'content-type': 'text/plain' }).end('ok');
+    return;
+  }
+  if (req.method === 'GET' && (pathname === '/' || pathname === '/index.html' || pathname === '/words.js')) {
+    const file = pathname === '/words.js' ? 'words.js' : 'index.html';
+    const contentType = file === 'words.js' ? 'text/javascript' : 'text/html';
+    try {
+      res.writeHead(200, { 'content-type': `${contentType}; charset=utf-8`, 'cache-control': 'no-store', 'x-robots-tag': 'noindex' }).end(await readFile(new URL(`./dist/${file}`, import.meta.url)));
+    } catch { res.writeHead(500).end(); }
     return;
   }
   res.writeHead(404).end();

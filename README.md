@@ -16,6 +16,6 @@ Mỗi từ có 15 giây để đoán. Nếu chưa ai trả lời đúng, đáp �
 
 Bình luận và bảng xếp hạng dùng tên hiển thị cùng ảnh đại diện từ sự kiện TikTok LIVE. Nếu ảnh không có hoặc tải lỗi, trang hiện chữ cái đầu của tên.
 
-Khi tắt cầu nối, điểm số của buổi chơi trên máy được đặt lại. Link Site trực tuyến thông thường là bản xem thử và chơi thử; link được tạo ở bước 5 nhận trạng thái từ cầu nối trên máy phát qua một cổng chỉ đọc. Link tạm có thể được mở bởi bất kỳ ai có link, nên chỉ chia sẻ với người cần xem. Site vẫn giữ quyền truy cập riêng hiện tại.
+Khi tắt cầu nối, điểm số của buổi chơi trên máy được đặt lại. Link Site trực tuyến thông thường là bản xem thử và chơi thử; link được tạo ở bước 5 là trang xem chỉ đọc qua cầu nối trên máy phát. Link tạm có thể được mở bởi bất kỳ ai có link, nên chỉ chia sẻ với người cần xem. Site vẫn giữ quyền truy cập riêng hiện tại.
 
 Cầu nối dùng thư viện TikTok LIVE không chính thức, nên TikTok có thể thay đổi giao thức. Phải chạy cầu nối trên máy phát stream để nhận bình luận thật.
