@@ -13,6 +13,17 @@ root = Path(__file__).resolve().parents[1]
 db = sqlite3.connect(sys.argv[1])
 entries = []
 missing = []
+# Some source IPA rows are missing or truncated; verified against Cambridge Dictionary.
+ipa_overrides = {
+    "careful": "/ˈker.fəl/",
+    "sunshine": "/ˈsʌn.ʃaɪn/",
+    "orange": "/ˈɔːr.ɪndʒ/",
+    "tomato": "/təˈmeɪ.t̬oʊ/",
+    "neighbor": "/ˈneɪ.bɚ/",
+    "pencil": "/ˈpen.səl/",
+    "read": "/riːd/",
+    "begin": "/bɪˈɡɪn/",
+}
 
 def normalize(text):
     text = unicodedata.normalize("NFD", text.lower().replace("đ", "d"))
@@ -35,9 +46,10 @@ for line in (root / "tools" / "quiz_words.tsv").read_text(encoding="utf-8").spli
     ipa = db.execute("""select p.ipa from words w join pronunciations p on p.word_id = w.id
         where w.word = ? and w.lang_code = 'en' and p.ipa like '/%/'
         order by p.id limit 1""", (word,)).fetchone()
-    entries.append({"word": word, "phonetic": ipa[0] if ipa else "", "answer": answer, "aliases": aliases})
+    entries.append({"word": word, "phonetic": ipa_overrides.get(word, ipa[0] if ipa else ""), "answer": answer, "aliases": aliases})
 
 assert len(entries) >= 80, f"Only {len(entries)} verified entries; missing: {missing}"
+assert all(entry["phonetic"] and not entry["phonetic"].startswith("/.") for entry in entries)
 (root / "dist" / "words.js").write_text(
     "// Derived from minhqnd/dictionary v2.0.0, CC BY-SA 4.0.\nexport const WORDS=" + json.dumps(entries, ensure_ascii=False, separators=(",", ":")) + ";\n",
     encoding="utf-8",

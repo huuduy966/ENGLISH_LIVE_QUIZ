@@ -4,4 +4,4 @@ Danh sách câu đố trong `dist/words.js` được tuyển chọn và chuyển
 
 Dữ liệu nguồn và danh sách chuyển thể được sử dụng theo giấy phép [Creative Commons Attribution-ShareAlike 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Có thể chia sẻ và chỉnh sửa danh sách này theo cùng giấy phép, đồng thời ghi công tác giả và dẫn nguồn.
 
-Tệp `tools/quiz_words.tsv` chứa cách chọn nghĩa phù hợp với trò chơi. `tools/build_dictionary.py` xác nhận từng nghĩa với mục từ tiếng Anh trong cơ sở dữ liệu và lấy cách phát âm trước khi tạo `dist/words.js`.
+Tệp `tools/quiz_words.tsv` chứa cách chọn nghĩa phù hợp với trò chơi. `tools/build_dictionary.py` xác nhận từng nghĩa với mục từ tiếng Anh trong cơ sở dữ liệu và lấy cách phát âm trước khi tạo `dist/words.js`. Tám phiên âm bị thiếu hoặc cắt trong dữ liệu nguồn được kiểm tra và sửa theo [Cambridge Dictionary](https://dictionary.cambridge.org/pronunciation/english/careful).
