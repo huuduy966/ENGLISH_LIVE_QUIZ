@@ -48,23 +48,25 @@ setInterval(() => {
   }
 }, 100);
 
-function chat(id, name, message) {
+function chat(id, name, message, avatar = '') {
   id = String(id || name).slice(0, 80);
   name = String(name || 'Khách').slice(0, 35);
   message = String(message || '').slice(0, 180).trim();
+  avatar = typeof avatar === 'string' && /^https:\/\//i.test(avatar) ? avatar.slice(0, 2048) : '';
   if (!message) return;
   const word = WORDS[wordIndex];
   const correct = !shown && Date.now() - startedAt < ROUND_MS && !answered.has(id) && [word.answer, ...word.aliases].some(a => normalize(a) === normalize(message));
   if (correct) {
     answered.add(id);
-    leaders[id] ??= { name, score: 0 };
+    leaders[id] ??= { name, avatar, score: 0 };
     leaders[id].name = name;
+    if (avatar) leaders[id].avatar = avatar;
     leaders[id].score++;
   }
-  comments.unshift({ name, message, correct });
+  comments.unshift({ name, avatar, message, correct });
   comments = comments.slice(0, 7);
   count++;
-  send({ type: 'chat', name, message, correct, leaders, count });
+  send({ type: 'chat', name, avatar, message, correct, leaders, count });
 }
 
 function send(event) {
@@ -80,7 +82,9 @@ async function connect(name) {
   const live = new TikTokLiveConnection(name);
   connection = live;
   live.on(WebcastEvent.CHAT, data => {
-    chat(data.user?.userId || data.user?.uniqueId, data.user?.nickname || data.user?.uniqueId, data.comment);
+    const user = data.user;
+    const avatar = user?.avatarThumb?.urlList?.[0] || user?.avatarMedium?.urlList?.[0] || user?.avatarLarge?.urlList?.[0];
+    chat(user?.id || user?.userId || user?.uniqueId || user?.displayId, user?.nickname || user?.displayId || user?.uniqueId, data.comment, avatar);
   });
   live.on('disconnected', () => {
     if (connection !== live) return;

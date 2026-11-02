@@ -13,6 +13,8 @@ Bộ 124 từ dùng các mục tiếng Anh, nghĩa tiếng Việt và phiên âm
 
 Mỗi từ có 15 giây để đoán. Nếu chưa ai trả lời đúng, đáp án hiện trong 5 giây rồi trang tự chuyển sang từ khác; nếu đã có người trả lời đúng, trang chuyển từ ngay khi hết 15 giây. Thanh ngang thu từ phải sang trái theo thời gian còn lại. Các nút **Từ tiếp** và **Hiện đáp án** nằm trong **Điều khiển cho chủ phòng**; nút **Gửi thử** dùng để kiểm tra bình luận, chấm điểm và tiếng ting trước buổi LIVE. Có thể nhập đáp án không dấu; mỗi người chỉ ghi điểm một lần trong một vòng.
 
+Bình luận và bảng xếp hạng dùng tên hiển thị cùng ảnh đại diện từ sự kiện TikTok LIVE. Nếu ảnh không có hoặc tải lỗi, trang hiện chữ cái đầu của tên.
+
 Khi tắt cầu nối, điểm số của buổi chơi trên máy được đặt lại. Bản Site trực tuyến là bản xem thử và chơi thử; việc nhận bình luận TikTok trực tiếp chạy qua URL localhost ở trên.
 
 Cầu nối dùng thư viện TikTok LIVE không chính thức, nên TikTok có thể thay đổi giao thức. Phải chạy cầu nối trên máy phát stream để nhận bình luận thật.
