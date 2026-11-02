@@ -180,22 +180,12 @@ async function usernameFromTikTokLink(link) {
 
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  const siteCors = req.headers.origin === siteOrigin && ['/api/connect', '/api/share'].includes(url.pathname);
-  if (siteCors) {
-    res.setHeader('access-control-allow-origin', siteOrigin);
-    res.setHeader('vary', 'Origin');
-    res.setHeader('access-control-allow-private-network', 'true');
-    if (req.method === 'OPTIONS') {
-      res.writeHead(204, { 'access-control-allow-methods': 'POST', 'access-control-allow-headers': 'content-type' }).end();
-      return;
-    }
-  }
   if (url.pathname === '/api/events') {
     serveEvents(req, res);
     return;
   }
   if (url.pathname === '/api/share' && req.method === 'POST') {
-    if (req.headers.origin && req.headers.origin !== `http://127.0.0.1:${port}` && req.headers.origin !== siteOrigin) { res.writeHead(403).end(); return; }
+    if (req.headers.origin && req.headers.origin !== `http://127.0.0.1:${port}`) { res.writeHead(403).end(); return; }
     try {
       const url = await startTunnel();
       res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ url }));
@@ -231,7 +221,7 @@ createServer(async (req, res) => {
     return;
   }
   if (url.pathname === '/api/connect' && req.method === 'POST') {
-    if (req.headers.origin && req.headers.origin !== `http://127.0.0.1:${port}` && req.headers.origin !== siteOrigin) { res.writeHead(403).end(); return; }
+    if (req.headers.origin && req.headers.origin !== `http://127.0.0.1:${port}`) { res.writeHead(403).end(); return; }
     let body = '';
     for await (const chunk of req) {
       body += chunk;

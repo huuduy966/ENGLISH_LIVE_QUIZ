@@ -137,14 +137,18 @@ $('live-form').onsubmit=async event=>{
     let link=$('live-link').value.trim(),url;
     try{url=new URL(link)}catch{throw Error('Link TikTok không hợp lệ.')}
     if(url.protocol!=='https:'||!['tiktok.com','www.tiktok.com','m.tiktok.com','vm.tiktok.com','vt.tiktok.com'].includes(url.hostname))throw Error('Hãy dán link livestream TikTok hợp lệ.');
-    const bridge=location.hostname==='127.0.0.1'&&location.port==='3000'?location.origin:'http://127.0.0.1:3000';
-    let response=await fetch(bridge+'/api/connect',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({link})});
+    if(location.hostname!=='127.0.0.1'||location.port!=='3000'){
+      let bridgePage=new URL('http://127.0.0.1:3000/');bridgePage.searchParams.set('live',link);bridgePage.searchParams.set('return','site');location.assign(bridgePage.href);return;
+    }
+    let response=await fetch('/api/connect',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({link}),signal:AbortSignal.timeout(35000)});
     let data=await response.json();if(!response.ok)throw Error(data.error||'Không kết nối được TikTok LIVE.');
     localStorage.setItem('tiktok-live-link',link);
-    response=await fetch(bridge+'/api/share',{method:'POST'});data=await response.json();if(!response.ok)throw Error(data.error||'Không tạo được link đồng bộ.');
-    let target=new URL(location.href);target.searchParams.set('sync',data.url);location.assign(target.href);
-  }catch(error){$('live-error').textContent=error instanceof TypeError?'Không truy cập được cầu nối. Hãy mở website trên máy livestream và chạy npm start.':error.message;button.disabled=false}
+    response=await fetch('/api/share',{method:'POST',signal:AbortSignal.timeout(35000)});data=await response.json();if(!response.ok)throw Error(data.error||'Không tạo được link đồng bộ.');
+    let target=params.get('return')==='site'?new URL('https://english-live-quiz-20261102.comfymound1.chatgpt.site/'):new URL(location.href);
+    target.searchParams.delete('live');target.searchParams.delete('return');target.searchParams.set('sync',data.url);location.assign(target.href);
+  }catch(error){$('live-error').textContent=error.name==='TimeoutError'?'Cầu nối phản hồi quá lâu. Hãy thử lại.':error.message;button.disabled=false}
 };
+if(params.has('live')&&location.hostname==='127.0.0.1'&&location.port==='3000'){$('live-link').value=params.get('live');$('live-dialog').showModal();$('live-form').requestSubmit()}
 function applyGame(data,offset=Date.now()-(data.serverTime||Date.now()),remote=false){
   let first=!serverMode,phaseChanged=current!==WORDS[data.wordIndex]||shown!==data.shown,delta=data.count-count,newCorrect=delta>0?data.comments.slice(0,delta).find(item=>item.correct):null;
   serverMode=true;clockOffset=offset;current=WORDS[data.wordIndex];round=data.round;shown=data.shown;startedAt=data.startedAt;revealedAt=data.revealedAt;
