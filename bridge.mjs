@@ -7,7 +7,7 @@ import { WORDS } from './dist/words.js';
 const port = Number(process.env.PORT || 3000);
 const relayPort = Number(process.env.RELAY_PORT || 3002);
 const siteOrigin = 'https://english-live-quiz-20261102.comfymound1.chatgpt.site';
-const viewerOrigins = new Set([siteOrigin, 'http://127.0.0.1:3001']);
+const viewerOrigins = new Set([siteOrigin, 'http://127.0.0.1:3000', 'http://127.0.0.1:3001']);
 const ROUND_MS = 15000;
 const REVEAL_MS = 5000;
 const clients = new Set();

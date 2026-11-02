@@ -53,16 +53,27 @@
     .sound-toggle:not(.on) .sound-on,.sound-toggle.on .sound-off{display:none}
     .sound-toggle:active{transform:scale(.92)}
     .sound-toggle:focus-visible{outline:2px solid #426B4D;outline-offset:3px}
-    .sync-status{position:absolute;z-index:3;top:25px;right:22px;display:flex;align-items:center;gap:6px;color:#52735A;font-size:10px;font-weight:700}
+    .sync-status{position:absolute;z-index:3;top:58px;right:22px;display:flex;align-items:center;gap:6px;color:#52735A;font-size:10px;font-weight:700}
     .sync-status:before{content:"";width:6px;height:6px;border-radius:50%;background:#6D936B;animation:sync-pulse 2s ease-in-out infinite}
     .sync-status.offline{color:#9A816C}.sync-status.offline:before{background:#B59B87;animation:none}
     @keyframes sync-pulse{50%{opacity:.4;transform:scale(.75)}}
+    .live-button{position:absolute;z-index:4;top:14px;right:22px;display:flex;align-items:center;gap:7px;border:1px solid #e7c4b8;border-radius:100px;background:#fff5ef;color:#b74735;padding:9px 12px;font-size:11px;font-weight:800;letter-spacing:.08em}
+    .live-button:before{content:"";width:8px;height:8px;border-radius:50%;background:#e45f49;box-shadow:0 0 0 0 #e45f4966;animation:live-pulse 1.4s ease-out infinite}
+    @keyframes live-pulse{60%,100%{box-shadow:0 0 0 7px #e45f4900}}
+    .live-button:focus-visible{outline:2px solid #b74735;outline-offset:3px}
+    .live-dialog{width:min(420px,calc(100% - 32px));border:1px solid #d8e3d2;border-radius:18px;background:#F7F9F4;color:#243d2e;padding:24px;box-shadow:0 24px 70px #243d2e30}
+    .live-dialog::backdrop{background:#1e302a80;backdrop-filter:blur(3px)}
+    .live-dialog h2{margin:0 0 8px;font-size:20px}.live-dialog p{margin:0 0 16px;color:#6d806d;font-size:12px;line-height:1.5}
+    .live-dialog input{width:100%;border:1px solid #c7d8c1;border-radius:10px;background:#fcfdf9;padding:12px;font-size:13px;outline-color:#6d936b}
+    .live-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.live-dialog button{border:0;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:800}.live-dialog .cancel{background:#e8eee3;color:#4b6750}.live-dialog .confirm{background:#426b4d;color:#fff}
+    .live-dialog .dialog-error{min-height:17px;margin:8px 0 0;color:#a44938}
     @media(max-width:370px){.sound-toggle{left:15px}}
   </style>
 </head>
 <body>
 <main class="app">
   <button id="sound" class="sound-toggle" type="button" aria-label="Bật âm thanh" aria-pressed="false" title="Bật âm thanh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path class="sound-on" d="M15 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/><path class="sound-off" d="m16 10 4 4m0-4-4 4"/></svg></button>
+  <button id="live-button" class="live-button" type="button" aria-haspopup="dialog">LIVE</button>
   <span id="sync-status" class="sync-status hidden offline" role="status">Đang đồng bộ…</span>
   <p class="eyebrow">ENGLISH WORD CHALLENGE</p>
   <section class="word-zone" aria-live="polite"><span class="flower" aria-hidden="true">✳</span><h1 id="word" class="word">brave</h1><p id="phonetic" class="phonetic">/breɪv/</p></section>
@@ -72,6 +83,15 @@
   <div id="win" class="win" role="status"><strong>✨ Chính xác!</strong><span id="winner"></span></div>
   <details id="host" class="host hidden"><summary>Điều khiển cho chủ phòng</summary><div class="host-inner"><div class="host-row actions"><button id="reveal" type="button">Hiện đáp án</button><button id="next" type="button">Từ tiếp →</button></div><div class="host-row"><input id="username" autocomplete="off" placeholder="TikTok username, ví dụ @tenkenh" aria-label="TikTok username"><button id="connect" type="button">Kết nối</button></div><div class="host-row"><input id="tester" autocomplete="off" placeholder="Nhập bình luận để thử" aria-label="Bình luận thử"><button id="send" type="button">Gửi thử</button></div><div class="host-row"><button id="share" type="button">Tạo link đồng bộ</button></div><div id="share-result" class="host-row hidden"><input id="share-link" readonly aria-label="Link đồng bộ cho màn hình khác"><button id="copy-link" type="button">Sao chép</button></div><p id="share-help" class="host-help"></p><p id="host-help" class="host-help">Mở bằng cầu nối trên máy livestream để nhận bình luận TikTok LIVE.</p><p class="host-credit">Từ điển: <a href="https://dict.minhqnd.com" target="_blank" rel="noopener">@minhqnd</a> · CC BY-SA 4.0</p></div></details>
 </main>
+<dialog id="live-dialog" class="live-dialog" aria-labelledby="live-title">
+  <form id="live-form">
+    <h2 id="live-title">Kết nối LIVE</h2>
+    <p>Dán link đồng bộ từ trang điều khiển trên máy livestream.</p>
+    <input id="live-link" type="url" inputmode="url" placeholder="https://...trycloudflare.com" aria-label="Link đồng bộ LIVE" required>
+    <p id="live-error" class="dialog-error" role="alert"></p>
+    <div class="dialog-actions"><button id="live-cancel" class="cancel" type="button">Hủy</button><button id="live-confirm" class="confirm" type="submit">Xác nhận</button></div>
+  </form>
+</dialog>
 <script type="module">
 import { WORDS } from './words.js';
 const $=id=>document.getElementById(id);
@@ -109,6 +129,19 @@ $('connect').onclick=async()=>{let username=$('username').value.trim().replace(/
 $('username').value=localStorage.getItem('wordlive-username')||'';
 const params=new URLSearchParams(location.search);
 if(params.get('host')==='1'&&params.get('display')!=='1'&&!location.hostname.endsWith('.trycloudflare.com'))$('host').classList.remove('hidden');
+$('live-button').onclick=()=>{$('live-link').value=params.get('sync')||'';$('live-error').textContent='';$('live-dialog').showModal();$('live-link').focus()};
+$('live-cancel').onclick=()=>$('live-dialog').close();
+$('live-form').onsubmit=async event=>{
+  event.preventDefault();let button=$('live-confirm');button.disabled=true;$('live-error').textContent='';
+  try{
+    let link=new URL($('live-link').value.trim());
+    if(link.protocol!=='https:'||!link.hostname.endsWith('.trycloudflare.com'))throw Error('Hãy dán link đồng bộ từ trang điều khiển.');
+    let origin=link.origin,response=await fetch(origin+'/api/state',{cache:'no-store',signal:AbortSignal.timeout(5000)});
+    if(!response.ok)throw Error('Link LIVE không còn hoạt động. Hãy tạo link mới.');
+    let state=await response.json();if(!Number.isInteger(state.wordIndex)||!Number.isFinite(state.serverTime))throw Error('Link này không phải phiên LIVE hợp lệ.');
+    let target=new URL(location.href);target.searchParams.set('sync',origin);location.assign(target.href);
+  }catch(error){$('live-error').textContent=error instanceof TypeError?'Không kết nối được. Hãy kiểm tra lại link LIVE.':error.message;button.disabled=false}
+};
 function applyGame(data,offset=Date.now()-(data.serverTime||Date.now()),remote=false){
   let first=!serverMode,phaseChanged=current!==WORDS[data.wordIndex]||shown!==data.shown,delta=data.count-count,newCorrect=delta>0?data.comments.slice(0,delta).find(item=>item.correct):null;
   serverMode=true;clockOffset=offset;current=WORDS[data.wordIndex];round=data.round;shown=data.shown;startedAt=data.startedAt;revealedAt=data.revealedAt;
