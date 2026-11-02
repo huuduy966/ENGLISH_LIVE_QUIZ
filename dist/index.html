@@ -129,7 +129,7 @@ $('connect').onclick=async()=>{let username=$('username').value.trim().replace(/
 $('username').value=localStorage.getItem('wordlive-username')||'';
 const params=new URLSearchParams(location.search);
 if(params.get('host')==='1'&&params.get('display')!=='1'&&!location.hostname.endsWith('.trycloudflare.com'))$('host').classList.remove('hidden');
-$('live-button').onclick=()=>{$('live-link').value=localStorage.getItem('tiktok-live-link')||'';$('live-error').textContent='';$('live-dialog').showModal();$('live-link').focus()};
+$('live-button').onclick=()=>{$('live-link').value='';$('live-error').textContent='';$('live-dialog').showModal();$('live-link').focus()};
 $('live-cancel').onclick=()=>$('live-dialog').close();
 $('live-form').onsubmit=async event=>{
   event.preventDefault();let button=$('live-confirm');button.disabled=true;$('live-error').textContent='';
@@ -142,7 +142,6 @@ $('live-form').onsubmit=async event=>{
     }
     let response=await fetch('/api/connect',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({link}),signal:AbortSignal.timeout(35000)});
     let data=await response.json();if(!response.ok)throw Error(data.error||'Không kết nối được TikTok LIVE.');
-    localStorage.setItem('tiktok-live-link',link);
     response=await fetch('/api/share',{method:'POST',signal:AbortSignal.timeout(35000)});data=await response.json();if(!response.ok)throw Error(data.error||'Không tạo được link đồng bộ.');
     let target=params.get('return')==='site'?new URL('https://english-live-quiz-20261102.comfymound1.chatgpt.site/'):new URL(location.href);
     target.searchParams.delete('live');target.searchParams.delete('return');target.searchParams.set('sync',data.url);location.assign(target.href);
