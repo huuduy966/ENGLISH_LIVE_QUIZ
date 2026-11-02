@@ -8,8 +8,8 @@ Bộ 124 từ dùng các mục tiếng Anh, nghĩa tiếng Việt và phiên âm
 
 1. Cài Node.js 20 trở lên.
 2. Trong thư mục này chạy `npm install` rồi `npm start`.
-3. Mở `http://127.0.0.1:3000`, vào **Điều khiển cho chủ phòng**, nhập TikTok username và nhấn **Kết nối** khi kênh đang LIVE.
-4. Trong OBS hoặc TikTok LIVE Studio, thêm Browser Source với URL `http://127.0.0.1:3000/?display=1`, kích thước 480 × 850. URL này ẩn điều khiển của chủ phòng.
+3. Mở `http://127.0.0.1:3000/?host=1`, vào **Điều khiển cho chủ phòng**, nhập TikTok username và nhấn **Kết nối** khi kênh đang LIVE.
+4. Trong OBS hoặc TikTok LIVE Studio, thêm Browser Source với URL `http://127.0.0.1:3000/?display=1`, kích thước 480 × 850. Trang hiển thị thông thường không có điều khiển của chủ phòng.
 
 Mỗi từ có 15 giây để đoán. Nếu chưa ai trả lời đúng, đáp án hiện trong 5 giây rồi trang tự chuyển sang từ khác; nếu đã có người trả lời đúng, trang chuyển từ ngay khi hết 15 giây. Thanh ngang thu từ phải sang trái theo thời gian còn lại. Các nút **Từ tiếp** và **Hiện đáp án** nằm trong **Điều khiển cho chủ phòng**; nút **Gửi thử** dùng để kiểm tra bình luận, chấm điểm và tiếng ting trước buổi LIVE. Có thể nhập đáp án không dấu; mỗi người chỉ ghi điểm một lần trong một vòng.
 
