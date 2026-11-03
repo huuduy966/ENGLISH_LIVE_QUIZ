@@ -12,11 +12,11 @@ Bộ 124 từ dùng các mục tiếng Anh, nghĩa tiếng Việt và phiên âm
 4. Trong OBS hoặc TikTok LIVE Studio, thêm Browser Source với URL `http://127.0.0.1:3000/?display=1`, kích thước 480 × 850. Trang hiển thị thông thường không có điều khiển của chủ phòng.
 5. Nhấn **Tạo link đồng bộ** trên trang chủ phòng. Sao chép link hiện ra và mở trên điện thoại hoặc máy khác. Các màn hình dùng cùng từ, đồng hồ, bình luận và bảng xếp hạng. Link này chỉ dùng được khi `npm start` và Cloudflare Tunnel còn chạy; sau khi khởi động lại cầu nối, hãy tạo link mới. Máy phát cần cài `cloudflared` để tạo link.
 
-Mỗi từ có 15 giây để đoán. Nếu chưa ai trả lời đúng, đáp án hiện trong 5 giây rồi trang tự chuyển sang từ khác; nếu đã có người trả lời đúng, trang chuyển từ ngay khi hết 15 giây. Thanh ngang thu từ phải sang trái theo thời gian còn lại. Các nút **Từ tiếp** và **Hiện đáp án** nằm trong **Điều khiển cho chủ phòng**; nút **Gửi thử** dùng để kiểm tra bình luận, chấm điểm và tiếng ting trước buổi LIVE. Có thể nhập đáp án không dấu; mỗi người chỉ ghi điểm một lần trong một vòng.
+Mỗi từ có 15 giây để đoán. Nếu chưa ai trả lời đúng, đáp án hiện trong 5 giây rồi trang tự chuyển sang từ khác; nếu đã có người trả lời đúng, trang chuyển từ ngay khi hết 15 giây. Thanh ngang thu từ phải sang trái theo thời gian còn lại. Các nút **Từ tiếp** và **Hiện đáp án** nằm trong **Điều khiển cho chủ phòng**. Có thể nhập đáp án không dấu; mỗi người chỉ ghi điểm một lần trong một vòng.
 
 Bình luận và bảng xếp hạng dùng tên hiển thị cùng ảnh đại diện từ sự kiện TikTok LIVE. Nếu ảnh không có hoặc tải lỗi, trang hiện chữ cái đầu của tên.
 
-Khi tắt cầu nối, điểm số của buổi chơi trên máy được đặt lại. Link Site trực tuyến thông thường là bản xem thử và chơi thử; điện thoại hoặc máy khác dùng link đồng bộ để xem phiên LIVE. Link được tạo ở bước 5 là trang xem chỉ đọc qua cầu nối trên máy phát. Link tạm có thể được mở bởi bất kỳ ai có link, nên chỉ chia sẻ với người cần xem. Site vẫn giữ quyền truy cập riêng hiện tại.
+Khi tắt cầu nối, điểm số của buổi chơi trên máy được đặt lại. Link Site trực tuyến thông thường chỉ hiển thị từ và đồng hồ độc lập; điện thoại hoặc máy khác dùng link đồng bộ để xem phiên LIVE. Link được tạo ở bước 5 là trang xem chỉ đọc qua cầu nối trên máy phát. Link tạm có thể được mở bởi bất kỳ ai có link, nên chỉ chia sẻ với người cần xem. Site vẫn giữ quyền truy cập riêng hiện tại.
 
 Tiếng ting tự bật khi có người trả lời đúng, tối đa một lần mỗi 2 giây. Một số trình duyệt chặn âm thanh tự phát cho đến khi người xem nhấp hoặc chạm vào trang lần đầu; với OBS Browser Source, cần cho phép âm thanh tự phát trong nguồn trình duyệt nếu nguồn không phát tiếng.
 

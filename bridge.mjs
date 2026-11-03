@@ -209,17 +209,6 @@ createServer(async (req, res) => {
     }
     return;
   }
-  if (url.pathname === '/api/test' && req.method === 'POST') {
-    let body = '';
-    for await (const chunk of req) body += chunk;
-    try {
-      chat('test', 'Bạn (thử)', JSON.parse(body).message);
-      res.writeHead(200, { 'content-type': 'application/json' }).end('{"ok":true}');
-    } catch (error) {
-      res.writeHead(400, { 'content-type': 'application/json' }).end(JSON.stringify({ error: error.message }));
-    }
-    return;
-  }
   if (url.pathname === '/api/connect' && req.method === 'POST') {
     if (req.headers.origin && req.headers.origin !== `http://127.0.0.1:${port}`) { res.writeHead(403).end(); return; }
     let body = '';
