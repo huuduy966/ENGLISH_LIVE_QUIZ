@@ -134,7 +134,7 @@ async function connect(name) {
   username = name;
   connected = false;
   send({ type: 'status', connected, message: `Đang kết nối @${name}…` });
-  const live = new TikTokLiveConnection(name);
+  const live = new TikTokLiveConnection(name, {});
   connection = live;
   live.on(WebcastEvent.CHAT, data => {
     const user = data.user;
