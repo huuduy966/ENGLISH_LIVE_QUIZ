@@ -62,6 +62,13 @@ for word, definition in db.execute("""select w.word, d.definition from words w
         continue
     entries[word] = {"word": word, "phonetic": pronunciations[word], "answer": answers[0], "aliases": answers[1:4]}
 
+overrides = json.loads((root / "tools" / "meaning_overrides.json").read_text(encoding="utf-8"))
+for word, answer in overrides.items():
+    if word not in entries:
+        raise ValueError(f"Missing word for corrected meaning: {word}")
+    entries[word]["answer"] = answer
+    entries[word]["aliases"] = []
+
 items = list(entries.values())
 output.write_text(
     "// Derived from minhqnd/dictionary v2.0.0, CC BY-SA 4.0.\n"
