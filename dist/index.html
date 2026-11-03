@@ -29,6 +29,13 @@
     @keyframes chat-fade{from{opacity:0}to{opacity:1}}
     @keyframes correct-flash{0%{background:#DCEBD2;box-shadow:0 0 0 4px #DCEBD2}100%{background:transparent;box-shadow:none}}
     .win.show{animation:winner-in .5s cubic-bezier(.2,.8,.2,1) both}
+    .celebration{position:absolute;inset:0;z-index:5;overflow:hidden;pointer-events:none}
+    .firework{position:absolute;width:4px;height:12px;border-radius:4px;background:var(--color);box-shadow:0 0 12px var(--color);opacity:0;animation:firework 1.6s cubic-bezier(.1,.65,.2,1) var(--delay) forwards}
+    .winner-name{position:absolute;top:18%;left:50%;width:max-content;max-width:90%;margin:0;transform:translateX(-50%);color:#365A42;font-size:14px;font-weight:800;text-align:center;text-shadow:0 2px 8px #F7F9F4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0}
+    .celebration.active .winner-name{animation:winner-name 2.5s ease both}
+    @keyframes firework{0%{opacity:1;transform:translate(-50%,-50%) rotate(var(--angle)) scale(.25)}75%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--angle)) scale(.7)}}
+    @keyframes winner-name{0%,8%{opacity:0;transform:translate(-50%,10px) scale(.9)}20%,75%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-8px) scale(1)}}
+    @media(prefers-reduced-motion:reduce){.firework{display:none}.celebration.active .winner-name{opacity:1;animation:none}}
     .host button{transition:transform .18s,background-color .18s}.host button:hover{transform:translateY(-2px)}.host button:active{transform:scale(.96)}
     @keyframes rise-in{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
     @keyframes word-in{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -85,7 +92,7 @@
   <p class="answer-label">ĐÁP ÁN</p><div id="tiles" class="tiles" aria-label="Các ô đáp án"></div><p id="prompt" class="prompt">Bạn biết từ này nghĩa là gì?</p>
   <div class="timer" aria-label="Thời gian còn lại"><span id="seconds" class="timer-count">15s</span><span class="timer-track"><span id="progress" class="timer-progress"></span></span></div>
   <div class="activity"><section class="column"><div class="section-head"><span class="section-title">🏆 BẢNG XẾP HẠNG</span></div><div id="leaders"></div></section><section class="column"><div class="section-head"><span class="section-title">BÌNH LUẬN</span></div><div id="comments"></div></section></div>
-  <div id="win" class="win" role="status"><strong>✨ Chính xác!</strong><span id="winner"></span></div>
+  <div id="celebration" class="celebration" role="status" aria-live="polite"><div id="fireworks" aria-hidden="true"></div><p id="winner" class="winner-name"></p></div>
   <details id="host" class="host hidden"><summary>Điều khiển cho chủ phòng</summary><div class="host-inner"><div class="host-row actions"><button id="reveal" type="button">Hiện đáp án</button><button id="next" type="button">Từ tiếp →</button></div><div class="host-row"><input id="username" autocomplete="off" placeholder="TikTok username, ví dụ @tenkenh" aria-label="TikTok username"><button id="connect" type="button">Kết nối</button></div><div class="host-row"><input id="tester" autocomplete="off" placeholder="Nhập bình luận để thử" aria-label="Bình luận thử"><button id="send" type="button">Gửi thử</button></div><div class="host-row"><button id="share" type="button">Tạo link đồng bộ</button></div><div id="share-result" class="host-row hidden"><input id="share-link" readonly aria-label="Link đồng bộ cho màn hình khác"><button id="copy-link" type="button">Sao chép</button></div><p id="share-help" class="host-help"></p><p id="host-help" class="host-help">Mở bằng cầu nối trên máy livestream để nhận bình luận TikTok LIVE.</p><p class="host-credit">Từ điển: <a href="https://dict.minhqnd.com" target="_blank" rel="noopener">@minhqnd</a> · CC BY-SA 4.0</p></div></details>
 </main>
 <dialog id="live-dialog" class="live-dialog" aria-labelledby="live-title">
@@ -119,7 +126,16 @@ function renderLeaders(){let list=Object.entries(leaders).sort((a,b)=>b[1].score
 function renderComments(animate=false){$('comments').replaceChildren();if(!comments.length){$('comments').innerHTML='<p class="empty">Bình luận sẽ xuất hiện tại đây khi bắt đầu LIVE.</p>';return}for(let [i,item] of comments.slice(0,6).entries()){let row=document.createElement('div');row.className='comment'+(item.correct?' correct':'')+(animate&&i===0?' enter':'');let bubble=document.createElement('div');bubble.className='bubble';let name=document.createElement('b');name.textContent=item.name;let message=document.createElement('p');message.textContent=item.message+(item.correct?' ✓':'');bubble.append(name,message);row.append(makeAvatar(item.name,item.avatar),bubble);$('comments').append(row)}}
 async function ting(){if(!soundEnabled||Date.now()-lastTing<2000)return;lastTing=Date.now();try{await audio.resume();if(audio.state!=='running')return;for(let [delay,freq] of [[0,880],[.11,1320]]){let o=audio.createOscillator(),g=audio.createGain();o.type='sine';o.frequency.value=freq;g.gain.setValueAtTime(.0001,audio.currentTime+delay);g.gain.exponentialRampToValueAtTime(.16,audio.currentTime+delay+.015);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+delay+.24);o.connect(g).connect(audio.destination);o.start(audio.currentTime+delay);o.stop(audio.currentTime+delay+.25)}}catch{}}
 let winnerTimeout;
-function celebrate(name){ting();$('winner').textContent=name+' +1 điểm';$('win').classList.remove('show');void $('win').offsetWidth;$('win').classList.add('show');clearTimeout(winnerTimeout);winnerTimeout=setTimeout(()=>$('win').classList.remove('show'),2500)}
+function celebrate(name){
+  ting();clearTimeout(winnerTimeout);$('winner').textContent='🎉 '+name+' +1 điểm';
+  let fragment=document.createDocumentFragment(),colors=['#E7B65C','#7FAF74','#E8896D','#C5DDA9'];
+  for(let [burst,[x,y]] of [[50,20],[29,32],[71,32]].entries())for(let i=0;i<16;i++){
+    let spark=document.createElement('span'),angle=i*Math.PI/8,radius=65+(i%3)*17;
+    spark.className='firework';spark.style.cssText=`left:${x}%;top:${y}%;--dx:${Math.cos(angle)*radius}px;--dy:${Math.sin(angle)*radius}px;--angle:${angle}rad;--delay:${burst*.12}s;--color:${colors[(i+burst)%colors.length]}`;fragment.append(spark)
+  }
+  $('fireworks').replaceChildren(fragment);$('celebration').classList.remove('active');void $('celebration').offsetWidth;$('celebration').classList.add('active');
+  winnerTimeout=setTimeout(()=>{$('celebration').classList.remove('active');$('fireworks').replaceChildren()},2600)
+}
 function submit(name,message,id=name){name=String(name||'Khách').slice(0,35);message=String(message||'').slice(0,180).trim();if(!message)return;id=String(id||name);let valid=[current.answer,...current.aliases].some(a=>normalize(a)===normalize(message));let correct=valid&&!answered.has(id)&&!shown&&Date.now()-startedAt<ROUND_MS;if(correct){answered.add(id);leaders[id]??={name,score:0};leaders[id].name=name;leaders[id].score++;localStorage.setItem('wordlive-leaders',JSON.stringify(leaders));celebrate(name);renderLeaders()}comments.unshift({name,message,correct});count++;renderComments(true)}
 function incoming(data){leaders=data.leaders;comments.unshift({name:data.name,avatar:data.avatar,message:data.message,correct:data.correct});count=data.count;if(data.correct){celebrate(data.name);renderLeaders()}renderComments(true)}
 const post=(path,data)=>fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)}).catch(e=>{$('host-help').textContent=e.message});
