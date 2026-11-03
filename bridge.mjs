@@ -19,6 +19,8 @@ let connection;
 let username = '';
 let connected = false;
 const excludedFile = new URL('./excluded-words.json', import.meta.url);
+const meaningsFile = new URL('./tools/meaning_overrides.json', import.meta.url);
+let meanings = JSON.parse(readFileSync(meaningsFile, 'utf8'));
 let excludedWords = new Set();
 try { excludedWords = new Set(JSON.parse(readFileSync(excludedFile, 'utf8'))); } catch {}
 const availableIndices = WORDS.flatMap((entry, index) => excludedWords.has(entry.word) ? [] : [index]);
@@ -33,7 +35,7 @@ let answered = new Set();
 let comments = [];
 let count = 0;
 const normalize = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-const game = () => ({ type: 'game', wordIndex, round, shown, startedAt, revealedAt, leaders, comments, count, username, connected, serverTime: Date.now() });
+const game = () => ({ type: 'game', wordIndex, clue: meanings[WORDS[wordIndex].word] || WORDS[wordIndex].answer, round, shown, startedAt, revealedAt, leaders, comments, count, username, connected, serverTime: Date.now() });
 
 function nextRound() {
   const previous = wordIndex;
@@ -54,8 +56,20 @@ function excludeCurrent() {
   writeFileSync(excludedFile, JSON.stringify([...nextExcluded]));
   excludedWords = nextExcluded;
   availableIndices.splice(availableIndices.indexOf(wordIndex), 1);
-  send({ type: 'status', connected, message: `Đã bỏ “${WORDS[wordIndex].answer}” (${word}) khỏi các vòng sau.` });
+  send({ type: 'status', connected, message: `Đã bỏ “${game().clue}” (${word}) khỏi các vòng sau.` });
   nextRound();
+}
+
+function correctMeaning(word, meaning) {
+  word = String(word || '').trim();
+  meaning = String(meaning || '').trim();
+  if (!WORDS.some(entry => entry.word === word)) throw new Error('Không tìm thấy từ tiếng Anh.');
+  if (!/^[\p{L}\p{M}][\p{L}\p{M} -]{0,39}$/u.test(meaning)) throw new Error('Nghĩa tiếng Việt cần dài từ 1 đến 40 ký tự.');
+  const updated = { ...meanings, [word]: meaning };
+  writeFileSync(meaningsFile, JSON.stringify(Object.fromEntries(Object.entries(updated).sort()), null, 2) + '\n');
+  meanings = updated;
+  send({ type: 'status', connected, message: `Đã sửa “${word}” thành “${meaning}”.` });
+  if (WORDS[wordIndex].word === word) nextRound();
 }
 
 function revealRound() {
@@ -231,11 +245,12 @@ createServer(async (req, res) => {
       if (body.length > 1024) { res.writeHead(413).end(); return; }
     }
     try {
-      const { action } = JSON.parse(body);
+      const { action, word, meaning } = JSON.parse(body);
       if (action === 'next') {
         nextRound();
       } else if (action === 'reveal') revealRound();
       else if (action === 'exclude') excludeCurrent();
+      else if (action === 'correct-meaning') correctMeaning(word, meaning);
       else if (action === 'disconnect') await disconnectLive();
       else throw new Error('Thao tác không hợp lệ');
       res.writeHead(200, { 'content-type': 'application/json' }).end('{"ok":true}');
