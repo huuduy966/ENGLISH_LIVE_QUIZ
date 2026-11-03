@@ -65,13 +65,17 @@
     .live-dialog input{width:100%;border:1px solid #c7d8c1;border-radius:10px;background:#fcfdf9;padding:12px;font-size:13px;outline-color:#6d936b}
     .live-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.live-dialog button{border:0;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:800}.live-dialog .cancel{background:#e8eee3;color:#4b6750}.live-dialog .confirm{background:#426b4d;color:#fff}
     .live-dialog .dialog-error{min-height:17px;margin:8px 0 0;color:#a44938}
+    .flower{display:inline-grid;place-items:center;width:38px;height:38px;right:2px;top:-21px;text-decoration:none;line-height:1;cursor:pointer;border-radius:50%;transition:transform .2s,color .2s}
+    .flower:hover{color:#426b4d;transform:rotate(55deg) scale(1.12)}.flower:focus-visible{outline:2px solid #426b4d;outline-offset:2px}
+    .admin-page{position:relative;z-index:1;animation:rise-in .35s ease both}.admin-back{display:inline-flex;align-items:center;gap:7px;color:#5b765d;text-decoration:none;font-size:12px;font-weight:700;margin-bottom:50px}.admin-back:hover{text-decoration:underline}.admin-kicker{font-size:10px;font-weight:800;letter-spacing:.2em;color:#8f987e;margin:0 0 10px}.admin-page h1{color:#243d2e;font:700 36px/1.1 'Space Grotesk','DM Sans',sans-serif;letter-spacing:-.04em;margin:0 0 12px}.admin-copy{color:#708171;font-size:13px;line-height:1.6;margin:0 0 25px}.admin-open{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 17px;border-radius:10px;background:#426b4d;color:white;text-decoration:none;font-size:12px;font-weight:800}.admin-open:hover{background:#31543b}.admin-view .eyebrow,.admin-view .word-zone,.admin-view .answer-label,.admin-view .tiles,.admin-view .prompt,.admin-view .timer,.admin-view .activity,.admin-view .celebration,.admin-view .sync-status{display:none!important}.admin-view .host{position:relative;z-index:1;display:block;margin-top:0;padding-top:0;border:0}.admin-view .host summary{display:none}.admin-view .host-inner{padding-top:0}.admin-view .host-row{margin-bottom:12px}.admin-view .host button,.admin-view .host input{min-height:42px}.admin-view .host-help{font-size:11px;margin-top:7px}.admin-view .host-credit{margin-top:24px}
   </style>
 </head>
 <body>
 <main class="app">
   <span id="sync-status" class="sync-status hidden offline" role="status">Đang đồng bộ…</span>
+  <section id="admin-page" class="admin-page hidden" aria-label="Trang quản trị"><a class="admin-back" href="./">← Quay lại trang chơi</a><p class="admin-kicker">LIVE CONTROL</p><h1>Quản trị</h1><p id="admin-copy" class="admin-copy">Điều khiển vòng chơi và kết nối TikTok LIVE trên máy livestream.</p><a id="admin-open" class="admin-open hidden" href="http://127.0.0.1:3000/?admin=1">Mở quản trị trên máy livestream →</a></section>
   <p class="eyebrow">ENGLISH WORD CHALLENGE</p>
-  <section class="word-zone" aria-live="polite"><span class="flower" aria-hidden="true">✳</span><h1 id="word" class="word">brave</h1><p id="phonetic" class="phonetic">/breɪv/</p></section>
+  <section class="word-zone" aria-live="polite"><a class="flower" href="?admin=1" aria-label="Mở trang quản trị" title="Mở trang quản trị">✳</a><h1 id="word" class="word">brave</h1><p id="phonetic" class="phonetic">/breɪv/</p></section>
   <p class="answer-label">ĐÁP ÁN</p><div id="tiles" class="tiles" aria-label="Các ô đáp án"></div><p id="prompt" class="prompt">Bạn biết từ này nghĩa là gì?</p>
   <div class="timer" aria-label="Thời gian còn lại"><span id="seconds" class="timer-count">15s</span><span class="timer-track"><span id="progress" class="timer-progress"></span></span></div>
   <div class="activity"><section class="column"><div class="section-head"><span class="section-title">🏆 BẢNG XẾP HẠNG</span></div><div id="leaders"></div></section><section class="column"><div class="section-head"><span class="section-title">BÌNH LUẬN</span></div><div id="comments"></div></section></div>
@@ -129,6 +133,14 @@ $('connect').onclick=async()=>{let input=$('username').value.trim();if(!input)re
 $('username').value=localStorage.getItem('wordlive-username')||'';
 const params=new URLSearchParams(location.search);
 if(params.has('demo')){let url=new URL(location.href);url.searchParams.delete('demo');history.replaceState(null,'',url)}
+let adminTarget=new URL(location.href);adminTarget.searchParams.set('admin','1');document.querySelector('.flower').href=adminTarget.href;
+let gameTarget=new URL(location.href);gameTarget.searchParams.delete('admin');document.querySelector('.admin-back').href=gameTarget.href;
+if(params.get('admin')==='1'){
+  document.title='Quản trị · English Live Quiz';
+  document.querySelector('.app').classList.add('admin-view');$('admin-page').classList.remove('hidden');
+  if(location.hostname==='127.0.0.1'&&location.port==='3000'){$('host').classList.remove('hidden');$('host').open=true}
+  else{$('admin-copy').textContent='Để kết nối TikTok LIVE và điều khiển vòng chơi, mở trang quản trị trên máy đang chạy cầu nối.';$('admin-open').classList.remove('hidden')}
+}
 if(params.get('host')==='1'&&params.get('display')!=='1'&&!location.hostname.endsWith('.trycloudflare.com'))$('host').classList.remove('hidden');
 $('live-cancel').onclick=()=>$('live-dialog').close();
 $('live-form').onsubmit=async event=>{

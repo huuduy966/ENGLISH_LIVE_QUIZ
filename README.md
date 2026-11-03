@@ -8,7 +8,7 @@ Bộ 124 từ dùng các mục tiếng Anh, nghĩa tiếng Việt và phiên âm
 
 1. Cài Node.js 20 trở lên.
 2. Trong thư mục này chạy `npm install` rồi `npm start`.
-3. Mở `http://127.0.0.1:3000/?host=1`, vào **Điều khiển cho chủ phòng**, nhập TikTok username hoặc link LIVE rồi nhấn **Kết nối** khi kênh đang LIVE.
+3. Mở `http://127.0.0.1:3000/`, nhấn biểu tượng ✳ để vào trang quản trị, nhập TikTok username hoặc link LIVE rồi nhấn **Kết nối** khi kênh đang LIVE. Từ Site online, biểu tượng ✳ cũng dẫn tới trang quản trị và có nút mở cầu nối trên máy livestream.
 4. Trong OBS hoặc TikTok LIVE Studio, thêm Browser Source với URL `http://127.0.0.1:3000/?display=1`, kích thước 480 × 850. Trang hiển thị thông thường không có điều khiển của chủ phòng.
 5. Nhấn **Tạo link đồng bộ** trên trang chủ phòng. Sao chép link hiện ra và mở trên điện thoại hoặc máy khác. Các màn hình dùng cùng từ, đồng hồ, bình luận và bảng xếp hạng. Link này chỉ dùng được khi `npm start` và Cloudflare Tunnel còn chạy; sau khi khởi động lại cầu nối, hãy tạo link mới. Máy phát cần cài `cloudflared` để tạo link.
 
