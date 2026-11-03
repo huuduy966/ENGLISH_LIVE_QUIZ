@@ -155,6 +155,7 @@ async function connect(name) {
   const live = new TikTokLiveConnection(name, {});
   connection = live;
   live.on(WebcastEvent.CHAT, data => {
+    if (connection !== live) return;
     const user = data.user;
     const avatar = user?.avatarThumb?.urlList?.[0] || user?.avatarMedium?.urlList?.[0] || user?.avatarLarge?.urlList?.[0];
     chat(user?.id || user?.userId || user?.uniqueId || user?.displayId, user?.nickname || user?.displayId || user?.uniqueId, data.content ?? data.comment, avatar);
@@ -175,6 +176,16 @@ async function connect(name) {
       send({ type: 'status', connected, message: `Chưa kết nối được @${name}: ${error.message}` });
     }
   }
+}
+
+async function disconnectLive() {
+  const live = connection;
+  connection = undefined;
+  connected = false;
+  username = '';
+  send({ type: 'status', connected, message: 'Đã ngắt kết nối TikTok LIVE.' });
+  send(game());
+  if (live) await live.disconnect().catch(() => {});
 }
 
 async function usernameFromTikTokLink(link) {
@@ -225,6 +236,7 @@ createServer(async (req, res) => {
         nextRound();
       } else if (action === 'reveal') revealRound();
       else if (action === 'exclude') excludeCurrent();
+      else if (action === 'disconnect') await disconnectLive();
       else throw new Error('Thao tác không hợp lệ');
       res.writeHead(200, { 'content-type': 'application/json' }).end('{"ok":true}');
     } catch (error) {
