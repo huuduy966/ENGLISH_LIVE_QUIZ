@@ -143,10 +143,11 @@ const demoMode=params.get('demo')==='1';
 if(demoMode){
   $('demo-bar').classList.remove('hidden');
   $('stop-demo').onclick=()=>{let url=new URL(location.href);url.searchParams.delete('demo');location.assign(url.href)};
+  leaders={};
   let names=['Minh Anh','Hà Linh','Tuấn Kiệt','Ngọc Mai','Bảo Trâm','Gia Huy','Phương Vy','Đức Anh','Thảo Nhi','Quốc Bảo','Khánh Ly','Hoàng Nam'];
   let guesses=['mình nghĩ là vui vẻ','có phải là cẩn thận không?','kiên nhẫn','hạnh phúc','rất thú vị','đẹp quá','cố gắng','tự tin','bình yên','học thêm từ mới'];
   let sequence=0;
-  let addDemoComment=()=>{if(serverMode)return;let n=sequence++;comments.unshift({name:names[n%names.length],message:guesses[n%guesses.length],correct:false});comments.length=Math.min(comments.length,6);count++;renderComments(true)};
+  let addDemoComment=()=>{if(serverMode)return;let n=sequence++,name=names[n%names.length],id='demo-'+name,correct=n%10===9&&!shown&&answered.size===0;comments.unshift({name,message:correct?current.answer:guesses[n%guesses.length],correct});comments.length=Math.min(comments.length,6);count++;if(correct){answered.add(id);leaders[id]??={name,score:0};leaders[id].score++;renderLeaders();celebrate(name)}renderComments(true)};
   addDemoComment();setInterval(addDemoComment,200);
 }
 if(params.get('host')==='1'&&params.get('display')!=='1'&&!location.hostname.endsWith('.trycloudflare.com'))$('host').classList.remove('hidden');
