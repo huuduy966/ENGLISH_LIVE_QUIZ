@@ -58,34 +58,21 @@
     .medal:first-child .rank{background:#E0EDD6;color:#466D47}
     .comment .avatar{background:#E4EEE0;color:#577451}
     .host input{background:#FCFDF9}
-    .eyebrow{margin-top:28px}
-    .sound-toggle{position:absolute;z-index:3;top:14px;left:22px;display:grid;place-items:center;width:38px;height:38px;padding:0;border:1px solid #C7D8C1;border-radius:50%;background:#EEF4E9;color:#52735A;transition:background-color .2s,transform .2s}
-    .sound-toggle.on{background:#426B4D;color:white;border-color:#426B4D}
-    .sound-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-    .sound-toggle:not(.on) .sound-on,.sound-toggle.on .sound-off{display:none}
-    .sound-toggle:active{transform:scale(.92)}
-    .sound-toggle:focus-visible{outline:2px solid #426B4D;outline-offset:3px}
-    .sync-status{position:absolute;z-index:3;top:58px;right:22px;display:flex;align-items:center;gap:6px;color:#52735A;font-size:10px;font-weight:700}
+    .eyebrow{margin-top:18px}
+    .sync-status{position:absolute;z-index:3;top:25px;right:22px;display:flex;align-items:center;gap:6px;color:#52735A;font-size:10px;font-weight:700}
     .sync-status:before{content:"";width:6px;height:6px;border-radius:50%;background:#6D936B;animation:sync-pulse 2s ease-in-out infinite}
     .sync-status.offline{color:#9A816C}.sync-status.offline:before{background:#B59B87;animation:none}
     @keyframes sync-pulse{50%{opacity:.4;transform:scale(.75)}}
-    .live-button{position:absolute;z-index:4;top:14px;right:22px;display:flex;align-items:center;gap:7px;border:1px solid #e7c4b8;border-radius:100px;background:#fff5ef;color:#b74735;padding:9px 12px;font-size:11px;font-weight:800;letter-spacing:.08em}
-    .live-button:before{content:"";width:8px;height:8px;border-radius:50%;background:#e45f49;box-shadow:0 0 0 0 #e45f4966;animation:live-pulse 1.4s ease-out infinite}
-    @keyframes live-pulse{60%,100%{box-shadow:0 0 0 7px #e45f4900}}
-    .live-button:focus-visible{outline:2px solid #b74735;outline-offset:3px}
     .live-dialog{width:min(420px,calc(100% - 32px));border:1px solid #d8e3d2;border-radius:18px;background:#F7F9F4;color:#243d2e;padding:24px;box-shadow:0 24px 70px #243d2e30}
     .live-dialog::backdrop{background:#1e302a80;backdrop-filter:blur(3px)}
     .live-dialog h2{margin:0 0 8px;font-size:20px}.live-dialog p{margin:0 0 16px;color:#6d806d;font-size:12px;line-height:1.5}
     .live-dialog input{width:100%;border:1px solid #c7d8c1;border-radius:10px;background:#fcfdf9;padding:12px;font-size:13px;outline-color:#6d936b}
     .live-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.live-dialog button{border:0;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:800}.live-dialog .cancel{background:#e8eee3;color:#4b6750}.live-dialog .confirm{background:#426b4d;color:#fff}
     .live-dialog .dialog-error{min-height:17px;margin:8px 0 0;color:#a44938}
-    @media(max-width:370px){.sound-toggle{left:15px}}
   </style>
 </head>
 <body>
 <main class="app">
-  <button id="sound" class="sound-toggle" type="button" aria-label="Bật âm thanh" aria-pressed="false" title="Bật âm thanh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path class="sound-on" d="M15 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/><path class="sound-off" d="m16 10 4 4m0-4-4 4"/></svg></button>
-  <button id="live-button" class="live-button" type="button" aria-haspopup="dialog">LIVE</button>
   <span id="sync-status" class="sync-status hidden offline" role="status">Đang đồng bộ…</span>
   <p class="eyebrow">ENGLISH WORD CHALLENGE</p>
   <section class="word-zone" aria-live="polite"><span class="flower" aria-hidden="true">✳</span><h1 id="word" class="word">brave</h1><p id="phonetic" class="phonetic">/breɪv/</p></section>
@@ -110,7 +97,7 @@ const $=id=>document.getElementById(id);
 const normalize=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const saved=JSON.parse(localStorage.getItem('wordlive-leaders')||'{}');
 const ROUND_MS=15000,REVEAL_MS=5000;
-let leaders=saved,comments=[],round=1,current=WORDS[Math.floor(Math.random()*WORDS.length)],answered=new Set(),count=0,shown=false,audio,soundEnabled=false,lastTing=0,serverMode=false,startedAt=Date.now(),revealedAt=null,clockOffset=0;
+let leaders=saved,comments=[],round=1,current=WORDS[Math.floor(Math.random()*WORDS.length)],answered=new Set(),count=0,shown=false,audio,lastTing=0,serverMode=false,startedAt=Date.now(),revealedAt=null,clockOffset=0;
 let lastRenderedWord;
 function renderWord(){
   if(current.word!==lastRenderedWord){let zone=document.querySelector('.word-zone');zone.classList.remove('new-round');void zone.offsetWidth;zone.classList.add('new-round');lastRenderedWord=current.word}
@@ -124,7 +111,9 @@ function tick(){let duration=shown?REVEAL_MS:ROUND_MS,now=Date.now()-(serverMode
 function makeAvatar(name,url){let avatar=document.createElement('span');avatar.className='avatar';avatar.textContent=String(name||'K').slice(0,1).toUpperCase();if(typeof url==='string'&&/^https:\/\//i.test(url)){let img=document.createElement('img');img.src=url;img.alt='';img.onerror=()=>img.remove();avatar.append(img)}return avatar}
 function renderLeaders(){let list=Object.entries(leaders).sort((a,b)=>b[1].score-a[1].score||a[1].name.localeCompare(b[1].name)).slice(0,10);$('leaders').replaceChildren();if(!list.length){$('leaders').innerHTML='<p class="empty">Chưa có người ghi điểm.<br>Ai sẽ dẫn đầu?</p>';return}for(let i=0;i<list.length;i++){let row=document.createElement('div');row.className='leader-name';row.style.setProperty('--i',i);let label=document.createElement('span');label.className='leader-label';label.textContent=list[i][1].name;row.append(makeAvatar(list[i][1].name,list[i][1].avatar),label);$('leaders').append(row)}}
 function renderComments(animate=false){$('comments').replaceChildren();if(!comments.length){$('comments').innerHTML='<p class="empty">Bình luận sẽ xuất hiện tại đây khi bắt đầu LIVE.</p>';return}for(let [i,item] of comments.slice(0,6).entries()){let row=document.createElement('div');row.className='comment'+(item.correct?' correct':'')+(animate&&i===0?' enter':'');let bubble=document.createElement('div');bubble.className='bubble';let name=document.createElement('b');name.textContent=item.name;let message=document.createElement('p');message.textContent=item.message+(item.correct?' ✓':'');bubble.append(name,message);row.append(makeAvatar(item.name,item.avatar),bubble);$('comments').append(row)}}
-async function ting(){if(!soundEnabled||Date.now()-lastTing<2000)return;lastTing=Date.now();try{await audio.resume();if(audio.state!=='running')return;for(let [delay,freq] of [[0,880],[.11,1320]]){let o=audio.createOscillator(),g=audio.createGain();o.type='sine';o.frequency.value=freq;g.gain.setValueAtTime(.0001,audio.currentTime+delay);g.gain.exponentialRampToValueAtTime(.16,audio.currentTime+delay+.015);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+delay+.24);o.connect(g).connect(audio.destination);o.start(audio.currentTime+delay);o.stop(audio.currentTime+delay+.25)}}catch{}}
+function unlockAudio(){try{audio??=new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume().catch(()=>{})}catch{}}
+unlockAudio();addEventListener('pointerdown',unlockAudio);addEventListener('keydown',unlockAudio);
+async function ting(){if(Date.now()-lastTing<2000)return;unlockAudio();if(!audio)return;try{if(audio.state!=='running')await Promise.race([audio.resume(),new Promise(resolve=>setTimeout(resolve,200))]);if(audio.state!=='running')return;lastTing=Date.now();for(let [delay,freq] of [[0,880],[.11,1320]]){let o=audio.createOscillator(),g=audio.createGain();o.type='sine';o.frequency.value=freq;g.gain.setValueAtTime(.0001,audio.currentTime+delay);g.gain.exponentialRampToValueAtTime(.16,audio.currentTime+delay+.015);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+delay+.24);o.connect(g).connect(audio.destination);o.start(audio.currentTime+delay);o.stop(audio.currentTime+delay+.25)}}catch{}}
 let winnerTimeout;
 function celebrate(name){
   ting();clearTimeout(winnerTimeout);$('winner').textContent='🎉 '+name+' +1 điểm';
@@ -139,7 +128,6 @@ function celebrate(name){
 function submit(name,message,id=name){name=String(name||'Khách').slice(0,35);message=String(message||'').slice(0,180).trim();if(!message)return;id=String(id||name);let valid=[current.answer,...current.aliases].some(a=>normalize(a)===normalize(message));let correct=valid&&!answered.has(id)&&!shown&&Date.now()-startedAt<ROUND_MS;if(correct){answered.add(id);leaders[id]??={name,score:0};leaders[id].name=name;leaders[id].score++;localStorage.setItem('wordlive-leaders',JSON.stringify(leaders));celebrate(name);renderLeaders()}comments.unshift({name,message,correct});count++;renderComments(true)}
 function incoming(data){leaders=data.leaders;comments.unshift({name:data.name,avatar:data.avatar,message:data.message,correct:data.correct});count=data.count;if(data.correct){celebrate(data.name);renderLeaders()}renderComments(true)}
 const post=(path,data)=>fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)}).catch(e=>{$('host-help').textContent=e.message});
-$('sound').onclick=async()=>{if(soundEnabled){soundEnabled=false;await audio?.suspend().catch(()=>{})}else{try{audio??=new (window.AudioContext||window.webkitAudioContext)();await audio.resume();soundEnabled=audio.state==='running'}catch{soundEnabled=false}}$('sound').classList.toggle('on',soundEnabled);$('sound').setAttribute('aria-pressed',String(soundEnabled));$('sound').setAttribute('aria-label',soundEnabled?'Tắt âm thanh':'Bật âm thanh');$('sound').title=soundEnabled?'Tắt âm thanh':'Bật âm thanh'};
 $('share').onclick=async()=>{let help=$('share-help');help.textContent='Đang tạo link đồng bộ…';try{let res=await fetch('/api/share',{method:'POST'}),data=await res.json();if(!res.ok)throw Error(data.error||'Không tạo được link');$('share-link').value=data.url;$('share-result').classList.remove('hidden');help.textContent='Mở link này trên điện thoại hoặc máy khác.'}catch(error){help.textContent=error.message}};
 $('copy-link').onclick=async()=>{try{await navigator.clipboard.writeText($('share-link').value);$('share-help').textContent='Đã sao chép link đồng bộ.'}catch{$('share-link').select();$('share-help').textContent='Hãy sao chép link đã chọn.'}};
 $('next').onclick=()=>{if(serverMode)post('/api/action',{action:'next'});else nextLocal()};
@@ -150,7 +138,6 @@ $('connect').onclick=async()=>{let username=$('username').value.trim().replace(/
 $('username').value=localStorage.getItem('wordlive-username')||'';
 const params=new URLSearchParams(location.search);
 if(params.get('host')==='1'&&params.get('display')!=='1'&&!location.hostname.endsWith('.trycloudflare.com'))$('host').classList.remove('hidden');
-$('live-button').onclick=()=>{$('live-link').value='';$('live-error').textContent='';$('live-dialog').showModal();$('live-link').focus()};
 $('live-cancel').onclick=()=>$('live-dialog').close();
 $('live-form').onsubmit=async event=>{
   event.preventDefault();let button=$('live-confirm');button.disabled=true;$('live-error').textContent='';
