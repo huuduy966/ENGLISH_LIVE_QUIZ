@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { TikTokLiveConnection, WebcastEvent } from 'tiktok-live-connector';
 import { WORDS } from './dist/words.js';
 
@@ -17,7 +18,12 @@ let tunnelStarting;
 let connection;
 let username = '';
 let connected = false;
-let wordIndex = Math.floor(Math.random() * WORDS.length);
+const excludedFile = new URL('./excluded-words.json', import.meta.url);
+let excludedWords = new Set();
+try { excludedWords = new Set(JSON.parse(readFileSync(excludedFile, 'utf8'))); } catch {}
+const availableIndices = WORDS.flatMap((entry, index) => excludedWords.has(entry.word) ? [] : [index]);
+if (!availableIndices.length) throw new Error('Không còn từ để chơi. Hãy xóa excluded-words.json để đặt lại.');
+let wordIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
 let round = 1;
 let shown = false;
 let startedAt = Date.now();
@@ -31,13 +37,25 @@ const game = () => ({ type: 'game', wordIndex, round, shown, startedAt, revealed
 
 function nextRound() {
   const previous = wordIndex;
-  while (wordIndex === previous) wordIndex = Math.floor(Math.random() * WORDS.length);
+  do { wordIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)]; }
+  while (wordIndex === previous && availableIndices.length > 1);
   round++;
   shown = false;
   revealedAt = null;
   startedAt = Date.now();
   answered = new Set();
   send(game());
+}
+
+function excludeCurrent() {
+  if (availableIndices.length < 2) throw new Error('Không còn từ khác để chơi.');
+  const word = WORDS[wordIndex].word;
+  const nextExcluded = new Set([...excludedWords, word]);
+  writeFileSync(excludedFile, JSON.stringify([...nextExcluded]));
+  excludedWords = nextExcluded;
+  availableIndices.splice(availableIndices.indexOf(wordIndex), 1);
+  send({ type: 'status', connected, message: `Đã bỏ “${word}” khỏi các vòng sau.` });
+  nextRound();
 }
 
 function revealRound() {
@@ -195,13 +213,18 @@ createServer(async (req, res) => {
     return;
   }
   if (url.pathname === '/api/action' && req.method === 'POST') {
+    if (req.headers.origin && req.headers.origin !== `http://127.0.0.1:${port}`) { res.writeHead(403).end(); return; }
     let body = '';
-    for await (const chunk of req) body += chunk;
+    for await (const chunk of req) {
+      body += chunk;
+      if (body.length > 1024) { res.writeHead(413).end(); return; }
+    }
     try {
       const { action } = JSON.parse(body);
       if (action === 'next') {
         nextRound();
       } else if (action === 'reveal') revealRound();
+      else if (action === 'exclude') excludeCurrent();
       else throw new Error('Thao tác không hợp lệ');
       res.writeHead(200, { 'content-type': 'application/json' }).end('{"ok":true}');
     } catch (error) {

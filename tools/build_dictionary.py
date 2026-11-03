@@ -30,7 +30,7 @@ def playable_answer(value):
     words = value.split()
     if not value or len(value) > 24 or len(words) > 4 or any(len(w) > 12 for w in words):
         return None
-    if re.search(r"\d|[A-Za-z]{12,}", value) or not any(ord(c) > 127 for c in value):
+    if re.search(r"\d|[A-Za-z]{12,}", value) or zipf_frequency(value, "vi") < 3.4:
         return None
     return value.casefold()
 
@@ -47,7 +47,7 @@ for word, definition in db.execute("""select w.word, d.definition from words w
     join definitions d on d.id = wd.definition_id
     where w.lang_code = 'en' and d.definition_lang = 'vi'
     order by wd.id"""):
-    if word in entries or word not in pronunciations or not 2 <= len(word) <= 20 or not valid_word.fullmatch(word) or zipf_frequency(word, "en") < 1.5:
+    if word in entries or word not in pronunciations or not 2 <= len(word) <= 20 or not valid_word.fullmatch(word) or " " in word or "-" in word or zipf_frequency(word, "en") < 4.0:
         continue
     definition = re.sub(r"\[[^]]*\]|\([^)]*\)", "", definition).split("(", 1)[0].strip()
     if skip_definition.match(definition):

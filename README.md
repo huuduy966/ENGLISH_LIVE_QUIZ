@@ -2,7 +2,7 @@
 
 Trang dọc dành cho TikTok LIVE. Người xem bình luận nghĩa tiếng Việt của từ tiếng Anh; mỗi người được một điểm cho mỗi vòng trả lời đúng. Cầu nối giữ vòng chơi và bảng xếp hạng đồng bộ giữa trang điều khiển và trang hiển thị.
 
-Bộ từ chơi được lấy từ các mục tiếng Anh có nghĩa tiếng Việt ngắn và phiên âm trong [minhqnd/dictionary](https://github.com/minhqnd/dictionary). Bộ 124 từ đã kiểm tra thủ công vẫn được giữ nguyên. Những dòng chỉ dẫn như “xem từ khác”, dạng chia động từ, đáp án quá dài và từ tiếng Anh lỗi hoặc cực hiếm được loại khỏi trò chơi. Xem [DATA-LICENSE.md](DATA-LICENSE.md) để biết nguồn và giấy phép dữ liệu. Để tạo lại danh sách từ, tải `dictionary.db` của bản phát hành v2.0.0, chạy `python -m pip install -r tools/requirements.txt` rồi `python tools/build_dictionary.py đường-dẫn-dictionary.db`.
+Bộ 4.007 từ chơi được lấy từ các mục tiếng Anh phổ biến có nghĩa tiếng Việt ngắn và phiên âm trong [minhqnd/dictionary](https://github.com/minhqnd/dictionary). Bộ 124 từ đã kiểm tra thủ công vẫn được giữ nguyên. Các từ ghép tự động, dạng chia động từ, đáp án quá dài và từ quá hiếm được loại khỏi trò chơi. Xem [DATA-LICENSE.md](DATA-LICENSE.md) để biết nguồn và giấy phép dữ liệu. Để tạo lại danh sách từ, tải `dictionary.db` của bản phát hành v2.0.0, chạy `python -m pip install -r tools/requirements.txt` rồi `python tools/build_dictionary.py đường-dẫn-dictionary.db`.
 
 ## Chạy trên máy phát stream
 
@@ -12,7 +12,7 @@ Bộ từ chơi được lấy từ các mục tiếng Anh có nghĩa tiếng Vi
 4. Trong OBS hoặc TikTok LIVE Studio, thêm Browser Source với URL `http://127.0.0.1:3000/?display=1`, kích thước 480 × 850. Trang hiển thị thông thường không có điều khiển của chủ phòng.
 5. Nhấn **Tạo link đồng bộ** trên trang chủ phòng. Sao chép link hiện ra và mở trên điện thoại hoặc máy khác. Các màn hình dùng cùng từ, đồng hồ, bình luận và bảng xếp hạng. Link này chỉ dùng được khi `npm start` và Cloudflare Tunnel còn chạy; sau khi khởi động lại cầu nối, hãy tạo link mới. Máy phát cần cài `cloudflared` để tạo link.
 
-Mỗi từ có 15 giây để đoán. Nếu chưa ai trả lời đúng, đáp án hiện trong 5 giây rồi trang tự chuyển sang từ khác; nếu đã có người trả lời đúng, trang chuyển từ ngay khi hết 15 giây. Thanh ngang thu từ phải sang trái theo thời gian còn lại. Các nút **Từ tiếp** và **Hiện đáp án** nằm trong **Điều khiển cho chủ phòng**. Có thể nhập đáp án không dấu; mỗi người chỉ ghi điểm một lần trong một vòng.
+Mỗi từ có 15 giây để đoán. Nếu chưa ai trả lời đúng, đáp án hiện trong 5 giây rồi trang tự chuyển sang từ khác; nếu đã có người trả lời đúng, trang chuyển từ ngay khi hết 15 giây. Thanh ngang thu từ phải sang trái theo thời gian còn lại. Trang quản trị có các nút **Từ tiếp**, **Hiện đáp án** và **Bỏ từ khó**. Nút **Bỏ từ khó** loại từ hiện tại khỏi các vòng sau, lưu danh sách tại `excluded-words.json` trên máy livestream và chuyển ngay sang từ mới. Có thể nhập đáp án không dấu; mỗi người chỉ ghi điểm một lần trong một vòng.
 
 Bình luận và bảng xếp hạng dùng tên hiển thị cùng ảnh đại diện từ sự kiện TikTok LIVE. Nếu ảnh không có hoặc tải lỗi, trang hiện chữ cái đầu của tên.
 
