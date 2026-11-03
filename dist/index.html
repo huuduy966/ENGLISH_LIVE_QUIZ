@@ -69,16 +69,16 @@
     .flower:hover{color:#426b4d;transform:rotate(55deg) scale(1.12)}.flower:focus-visible{outline:2px solid #426b4d;outline-offset:2px}
     .admin-page{position:relative;z-index:1;animation:rise-in .35s ease both}.admin-back{display:inline-flex;align-items:center;gap:7px;color:#5b765d;text-decoration:none;font-size:12px;font-weight:700;margin-bottom:50px}.admin-back:hover{text-decoration:underline}.admin-kicker{font-size:10px;font-weight:800;letter-spacing:.2em;color:#8f987e;margin:0 0 10px}.admin-page h1{color:#243d2e;font:700 36px/1.1 'Space Grotesk','DM Sans',sans-serif;letter-spacing:-.04em;margin:0 0 12px}.admin-copy{color:#708171;font-size:13px;line-height:1.6;margin:0 0 25px}.admin-open{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 17px;border-radius:10px;background:#426b4d;color:white;text-decoration:none;font-size:12px;font-weight:800}.admin-open:hover{background:#31543b}.admin-view .eyebrow,.admin-view .word-zone,.admin-view .answer-label,.admin-view .tiles,.admin-view .prompt,.admin-view .timer,.admin-view .activity,.admin-view .celebration,.admin-view .sync-status{display:none!important}.admin-view .host{position:relative;z-index:1;display:block;margin-top:0;padding-top:0;border:0}.admin-view .host summary{display:none}.admin-view .host-inner{padding-top:0}.admin-view .host-row{margin-bottom:12px}.admin-view .host button,.admin-view .host input{min-height:42px}.admin-view .host-help{font-size:11px;margin-top:7px}.admin-view .host-credit{margin-top:24px}
     .admin-view,.admin-page h1{font-family:'Manrope','DM Sans',sans-serif}.admin-view .host-row.actions{flex-wrap:wrap}.admin-current{margin:-12px 0 24px;color:#426b4d;font-size:13px;font-weight:800}.host #disconnect{background:#e8eee3;color:#426b4d}
-    .word{font-size:64px;white-space:nowrap;overflow-wrap:normal}.tiles{gap:6px 12px;min-height:40px}.tile-word{gap:3px}.tile{width:var(--tile-size,32px);height:calc(var(--tile-size,32px) + 8px);font-size:clamp(14px,calc(var(--tile-size,32px) * .6),20px);border-radius:8px}
+    .word{font-family:'Be Vietnam Pro','DM Sans',sans-serif;font-size:64px;letter-spacing:-.035em;white-space:nowrap;overflow-wrap:normal}.tiles{gap:6px 12px;min-height:40px}.tile-word{gap:3px}.tile{width:var(--tile-size,32px);height:calc(var(--tile-size,32px) + 8px);font-size:clamp(14px,calc(var(--tile-size,32px) * .6),20px);border-radius:8px}
   </style>
 </head>
 <body>
 <main class="app">
   <span id="sync-status" class="sync-status hidden offline" role="status">Đang đồng bộ…</span>
   <section id="admin-page" class="admin-page hidden" aria-label="Trang quản trị"><a class="admin-back" href="./">← Quay lại trang chơi</a><p class="admin-kicker">LIVE CONTROL</p><h1>Quản trị</h1><p id="admin-copy" class="admin-copy">Điều khiển vòng chơi và kết nối TikTok LIVE trên máy livestream.</p><p id="admin-current" class="admin-current hidden"></p><a id="admin-open" class="admin-open hidden" href="http://127.0.0.1:3000/?admin=1">Mở quản trị trên máy livestream →</a></section>
-  <p class="eyebrow">ENGLISH WORD CHALLENGE</p>
-  <section class="word-zone" aria-live="polite"><a class="flower" href="?admin=1" aria-label="Mở trang quản trị" title="Mở trang quản trị">✳</a><h1 id="word" class="word">brave</h1><p id="phonetic" class="phonetic">/breɪv/</p></section>
-  <p class="answer-label">ĐÁP ÁN</p><div id="tiles" class="tiles" aria-label="Các ô đáp án"></div><p id="prompt" class="prompt">Bạn biết từ này nghĩa là gì?</p>
+  <p class="eyebrow">VIETNAMESE TO ENGLISH</p>
+  <section class="word-zone" aria-live="polite"><a class="flower" href="?admin=1" aria-label="Mở trang quản trị" title="Mở trang quản trị">✳</a><h1 id="word" class="word">dũng cảm</h1><p id="phonetic" class="phonetic"></p></section>
+  <p class="answer-label">TỪ TIẾNG ANH</p><div id="tiles" class="tiles" aria-label="Các ô đáp án"></div><p id="prompt" class="prompt">Bạn biết từ này tiếng Anh là gì?</p>
   <div class="timer" aria-label="Thời gian còn lại"><span id="seconds" class="timer-count">15s</span><span class="timer-track"><span id="progress" class="timer-progress"></span></span></div>
   <div class="activity"><section class="column"><div class="section-head"><span class="section-title">🏆 BẢNG XẾP HẠNG</span></div><div id="leaders"></div></section><section class="column"><div class="section-head"><span class="section-title">BÌNH LUẬN</span></div><div id="comments"></div></section></div>
   <div id="celebration" class="celebration" aria-hidden="true"><div id="fireworks"></div></div>
@@ -103,15 +103,15 @@ function fitLayout(){
   let heading=$('word');heading.style.fontSize='64px';
   let natural=heading.scrollWidth,available=heading.clientWidth;
   if(available&&natural)heading.style.fontSize=Math.max(18,Math.min(64,Math.floor(64*available/natural)))+'px';
-  let parts=current.answer.toUpperCase().trim().split(/\s+/),lengths=parts.map(part=>[...part].length),letters=lengths.reduce((sum,length)=>sum+length,0),longest=Math.max(...lengths),width=$('tiles').clientWidth;
+  let parts=current.word.toUpperCase().trim().split(/\s+/),lengths=parts.map(part=>[...part].length),letters=lengths.reduce((sum,length)=>sum+length,0),longest=Math.max(...lengths),width=$('tiles').clientWidth;
   let oneLine=Math.floor((width-3*(letters-parts.length)-12*(parts.length-1))/letters),oneWord=Math.floor((width-3*(longest-1))/longest);
   $('tiles').style.setProperty('--tile-size',Math.max(20,Math.min(32,oneLine,oneWord))+'px');
 }
 function renderWord(){
   if(current.word!==lastRenderedWord){let zone=document.querySelector('.word-zone');zone.classList.remove('new-round');void zone.offsetWidth;zone.classList.add('new-round');lastRenderedWord=current.word}
-  $('word').textContent=current.word;$('phonetic').textContent=current.phonetic;$('admin-current').textContent='Từ hiện tại: '+current.word;
-  $('prompt').textContent=shown?'Nghĩa là: '+current.answer:'Bạn biết từ này nghĩa là gì?';$('prompt').classList.toggle('revealed',shown);
-  let index=0;$('tiles').replaceChildren(...current.answer.toUpperCase().trim().split(/\s+/).map(part=>{let group=document.createElement('span');group.className='tile-word';group.append(...[...part].map(letter=>{let el=document.createElement('span');el.className='tile';el.style.setProperty('--i',index++);el.textContent=shown?letter:'';if(shown)el.classList.add('revealed');return el}));return group}));fitLayout();
+  $('word').textContent=current.answer;$('phonetic').textContent=current.phonetic;$('phonetic').style.visibility=shown?'visible':'hidden';$('admin-current').textContent='Từ hiện tại: '+current.answer+' → '+current.word;
+  $('prompt').textContent=shown?'Tiếng Anh là: '+current.word:'Bạn biết từ này tiếng Anh là gì?';$('prompt').classList.toggle('revealed',shown);
+  let index=0;$('tiles').replaceChildren(...current.word.toUpperCase().trim().split(/\s+/).map(part=>{let group=document.createElement('span');group.className='tile-word';group.append(...[...part].map(letter=>{let el=document.createElement('span');el.className='tile';el.style.setProperty('--i',index++);el.textContent=shown?letter:'';if(shown)el.classList.add('revealed');return el}));return group}));fitLayout();
 }
 function nextLocal(){let next;do{next=WORDS[Math.floor(Math.random()*WORDS.length)]}while(next===current&&WORDS.length>1);current=next;round++;shown=false;revealedAt=null;startedAt=Date.now();renderWord()}
 function revealLocal(){if(shown)return;shown=true;revealedAt=Date.now();renderWord()}
@@ -139,7 +139,7 @@ $('share').onclick=async()=>{let help=$('share-help');help.textContent='Đang t�
 $('copy-link').onclick=async()=>{try{await navigator.clipboard.writeText($('share-link').value);$('share-help').textContent='Đã sao chép link đồng bộ.'}catch{$('share-link').select();$('share-help').textContent='Hãy sao chép link đã chọn.'}};
 $('next').onclick=()=>{if(serverMode)post('/api/action',{action:'next'});else nextLocal()};
 $('reveal').onclick=()=>{if(serverMode)post('/api/action',{action:'reveal'});else revealLocal()};
-$('exclude').onclick=async()=>{let word=current.word;try{let res=await fetch('/api/action',{method:'POST',headers:{'content-type':'application/json'},body:'{"action":"exclude"}'}),data=await res.json();if(!res.ok)throw Error(data.error||'Không bỏ được từ');$('host-help').textContent='Đã bỏ “'+word+'” khỏi các vòng sau.'}catch(error){$('host-help').textContent=error.message}};
+$('exclude').onclick=async()=>{let word=current.answer;try{let res=await fetch('/api/action',{method:'POST',headers:{'content-type':'application/json'},body:'{"action":"exclude"}'}),data=await res.json();if(!res.ok)throw Error(data.error||'Không bỏ được từ');$('host-help').textContent='Đã bỏ “'+word+'” khỏi các vòng sau.'}catch(error){$('host-help').textContent=error.message}};
 $('connect').onclick=async()=>{let input=$('username').value.trim();if(!input)return;localStorage.setItem('wordlive-username',input);$('host-help').textContent='Đang kết nối…';try{let payload=/^https?:\/\//i.test(input)?{link:input}:{username:input.replace(/^@/,'')},res=await fetch('/api/connect',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}),data=await res.json();if(!res.ok)throw Error(data.error||'Không kết nối được');$('host-help').textContent='Đã yêu cầu kết nối @'+data.username+'. Hãy bắt đầu TikTok LIVE.'}catch(e){$('host-help').textContent='Cần chạy cầu nối trên máy livestream: '+e.message}};
 $('disconnect').onclick=async()=>{let button=$('disconnect');button.disabled=true;try{let res=await fetch('/api/action',{method:'POST',headers:{'content-type':'application/json'},body:'{"action":"disconnect"}'}),data=await res.json();if(!res.ok)throw Error(data.error||'Không ngắt được kết nối');$('host-help').textContent='Đã ngắt kết nối TikTok LIVE.'}catch(error){$('host-help').textContent=error.message}finally{button.disabled=false}};
 $('username').value=localStorage.getItem('wordlive-username')||'';

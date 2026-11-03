@@ -54,7 +54,7 @@ function excludeCurrent() {
   writeFileSync(excludedFile, JSON.stringify([...nextExcluded]));
   excludedWords = nextExcluded;
   availableIndices.splice(availableIndices.indexOf(wordIndex), 1);
-  send({ type: 'status', connected, message: `Đã bỏ “${word}” khỏi các vòng sau.` });
+  send({ type: 'status', connected, message: `Đã bỏ “${WORDS[wordIndex].answer}” (${word}) khỏi các vòng sau.` });
   nextRound();
 }
 
@@ -80,7 +80,7 @@ function chat(id, name, message, avatar = '') {
   avatar = typeof avatar === 'string' && /^https:\/\//i.test(avatar) ? avatar.slice(0, 2048) : '';
   if (!message) return;
   const word = WORDS[wordIndex];
-  const correct = !shown && Date.now() - startedAt < ROUND_MS && !answered.has(id) && [word.answer, ...word.aliases].some(a => normalize(a) === normalize(message));
+  const correct = !shown && Date.now() - startedAt < ROUND_MS && !answered.has(id) && normalize(word.word) === normalize(message);
   if (correct) {
     answered.add(id);
     leaders[id] ??= { name, avatar, score: 0 };
