@@ -139,7 +139,7 @@ async function connect(name) {
   live.on(WebcastEvent.CHAT, data => {
     const user = data.user;
     const avatar = user?.avatarThumb?.urlList?.[0] || user?.avatarMedium?.urlList?.[0] || user?.avatarLarge?.urlList?.[0];
-    chat(user?.id || user?.userId || user?.uniqueId || user?.displayId, user?.nickname || user?.displayId || user?.uniqueId, data.comment, avatar);
+    chat(user?.id || user?.userId || user?.uniqueId || user?.displayId, user?.nickname || user?.displayId || user?.uniqueId, data.content ?? data.comment, avatar);
   });
   live.on('disconnected', () => {
     if (connection !== live) return;
