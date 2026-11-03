@@ -23,10 +23,10 @@
     .leader-name .avatar{width:22px;height:22px;font-size:10px}.leader-name .leader-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .avatar{position:relative;overflow:hidden}.avatar img{position:absolute;inset:0;width:100%;height:100%;border-radius:inherit;object-fit:cover}
     #comments{height:calc(clamp(230px,38dvh,350px) - 32px);display:grid;grid-template-rows:repeat(6,minmax(0,1fr));overflow:hidden}
-    .comment{min-height:0;margin:0;padding:2px 0;overflow:hidden;animation:none}.comment.enter{animation:chat-fade .25s ease both}
+    .comment{min-height:0;margin:0;padding:2px 0;overflow:hidden;animation:none}.comment.enter{animation:chat-fade .18s ease-out both}
     .comment .bubble p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
     .comment.correct.enter{animation:chat-fade .25s ease both,correct-flash 2s ease-out both}
-    @keyframes chat-fade{from{opacity:0}to{opacity:1}}
+    @keyframes chat-fade{from{opacity:0;transform:translate(10px,-5px)}to{opacity:1;transform:translate(0,0)}}
     @keyframes correct-flash{0%{background:#DCEBD2;box-shadow:0 0 0 4px #DCEBD2}100%{background:transparent;box-shadow:none}}
     .win.show{animation:winner-in .5s cubic-bezier(.2,.8,.2,1) both}
     .celebration{position:absolute;inset:0;z-index:5;overflow:hidden;pointer-events:none}
@@ -112,7 +112,7 @@ function revealLocal(){if(shown)return;shown=true;revealedAt=Date.now();renderWo
 function tick(){let duration=shown?REVEAL_MS:ROUND_MS,now=Date.now()-(serverMode?clockOffset:0),remaining=Math.max(0,duration-(now-(shown?revealedAt:startedAt)));$('seconds').textContent=Math.ceil(remaining/1000)+'s';$('progress').style.transform='scaleX('+(remaining/duration)+')';document.querySelector('.timer').classList.toggle('danger',!shown&&remaining<=5000);document.querySelector('.timer').classList.toggle('reveal',shown);if(!serverMode&&remaining===0){if(shown)nextLocal();else if(answered.size===0)revealLocal();else nextLocal()}}
 function makeAvatar(name,url){let avatar=document.createElement('span');avatar.className='avatar';avatar.textContent=String(name||'K').slice(0,1).toUpperCase();if(typeof url==='string'&&/^https:\/\//i.test(url)){let img=document.createElement('img');img.src=url;img.alt='';img.onerror=()=>img.remove();avatar.append(img)}return avatar}
 function renderLeaders(){let list=Object.entries(leaders).sort((a,b)=>b[1].score-a[1].score||a[1].name.localeCompare(b[1].name)).slice(0,10);$('leaders').replaceChildren();if(!list.length){$('leaders').innerHTML='<p class="empty">Chưa có người ghi điểm.<br>Ai sẽ dẫn đầu?</p>';return}for(let i=0;i<list.length;i++){let row=document.createElement('div');row.className='leader-name';row.style.setProperty('--i',i);let label=document.createElement('span');label.className='leader-label';label.textContent=list[i][1].name;row.append(makeAvatar(list[i][1].name,list[i][1].avatar),label);$('leaders').append(row)}}
-function renderComments(animate=false){$('comments').replaceChildren();if(!comments.length){$('comments').innerHTML='<p class="empty">Bình luận sẽ xuất hiện tại đây khi bắt đầu LIVE.</p>';return}for(let [i,item] of comments.slice(0,6).entries()){let row=document.createElement('div');row.className='comment'+(item.correct?' correct':'')+(animate&&(demoMode||i===0)?' enter':'');let bubble=document.createElement('div');bubble.className='bubble';let name=document.createElement('b');name.textContent=item.name;let message=document.createElement('p');message.textContent=item.message+(item.correct?' ✓':'');bubble.append(name,message);row.append(makeAvatar(item.name,item.avatar),bubble);$('comments').append(row)}}
+function renderComments(animate=false){$('comments').replaceChildren();if(!comments.length){$('comments').innerHTML='<p class="empty">Bình luận sẽ xuất hiện tại đây khi bắt đầu LIVE.</p>';return}for(let [i,item] of comments.slice(0,6).entries()){let row=document.createElement('div');row.className='comment'+(item.correct?' correct':'')+(animate&&i===0?' enter':'');let bubble=document.createElement('div');bubble.className='bubble';let name=document.createElement('b');name.textContent=item.name;let message=document.createElement('p');message.textContent=item.message+(item.correct?' ✓':'');bubble.append(name,message);row.append(makeAvatar(item.name,item.avatar),bubble);$('comments').append(row)}}
 function unlockAudio(){try{audio??=new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume().catch(()=>{})}catch{}}
 unlockAudio();addEventListener('pointerdown',unlockAudio);addEventListener('keydown',unlockAudio);
 async function ting(){if(Date.now()-lastTing<2000)return;unlockAudio();if(!audio)return;try{if(audio.state!=='running')await Promise.race([audio.resume(),new Promise(resolve=>setTimeout(resolve,200))]);if(audio.state!=='running')return;lastTing=Date.now();for(let [delay,freq] of [[0,880],[.11,1320]]){let o=audio.createOscillator(),g=audio.createGain();o.type='sine';o.frequency.value=freq;g.gain.setValueAtTime(.0001,audio.currentTime+delay);g.gain.exponentialRampToValueAtTime(.16,audio.currentTime+delay+.015);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+delay+.24);o.connect(g).connect(audio.destination);o.start(audio.currentTime+delay);o.stop(audio.currentTime+delay+.25)}}catch{}}
@@ -146,8 +146,8 @@ if(demoMode){
   let names=['Minh Anh','Hà Linh','Tuấn Kiệt','Ngọc Mai','Bảo Trâm','Gia Huy','Phương Vy','Đức Anh','Thảo Nhi','Quốc Bảo','Khánh Ly','Hoàng Nam'];
   let guesses=['mình nghĩ là vui vẻ','có phải là cẩn thận không?','kiên nhẫn','hạnh phúc','rất thú vị','đẹp quá','cố gắng','tự tin','bình yên','học thêm từ mới'];
   let sequence=0;
-  let burst=()=>{if(serverMode)return;for(let i=0;i<10;i++){let n=sequence++;comments.unshift({name:names[n%names.length],message:guesses[n%guesses.length],correct:false})}comments.length=Math.min(comments.length,6);count+=10;renderComments(true)};
-  burst();setInterval(burst,2000);
+  let addDemoComment=()=>{if(serverMode)return;let n=sequence++;comments.unshift({name:names[n%names.length],message:guesses[n%guesses.length],correct:false});comments.length=Math.min(comments.length,6);count++;renderComments(true)};
+  addDemoComment();setInterval(addDemoComment,200);
 }
 if(params.get('host')==='1'&&params.get('display')!=='1'&&!location.hostname.endsWith('.trycloudflare.com'))$('host').classList.remove('hidden');
 $('live-cancel').onclick=()=>$('live-dialog').close();
