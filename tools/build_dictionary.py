@@ -1,4 +1,4 @@
-"""Build quiz entries from minhqnd/dictionary release v2.0.0.
+"""Build all playable English/Vietnamese quiz entries from minhqnd/dictionary v2.0.0.
 
 Run: python tools/build_dictionary.py path/to/dictionary.db
 """
@@ -6,52 +6,65 @@ import json
 import re
 import sqlite3
 import sys
-import unicodedata
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 db = sqlite3.connect(sys.argv[1])
-entries = []
-missing = []
-# Some source IPA rows are missing or truncated; verified against Cambridge Dictionary.
-ipa_overrides = {
-    "careful": "/ˈker.fəl/",
-    "sunshine": "/ˈsʌn.ʃaɪn/",
-    "orange": "/ˈɔːr.ɪndʒ/",
-    "tomato": "/təˈmeɪ.t̬oʊ/",
-    "neighbor": "/ˈneɪ.bɚ/",
-    "pencil": "/ˈpen.səl/",
-    "read": "/riːd/",
-    "begin": "/bɪˈɡɪn/",
-}
+output = root / "dist" / "words.js"
 
-def normalize(text):
-    text = unicodedata.normalize("NFD", text.lower().replace("đ", "d"))
-    text = "".join(c for c in text if unicodedata.category(c) != "Mn")
-    return " ".join(re.findall(r"[a-z0-9]+", text))
+# Keep the manually checked meanings and pronunciation fixes for the original set.
+original = json.loads((root / "tools" / "curated_words.json").read_text(encoding="utf-8"))
+entries = {item["word"]: item for item in original if isinstance(item, dict)}
+skip_definition = re.compile(
+    r"^(?:xem|số nhiều|quá khứ|động từ chia|dạng|viết tắt|từ viết tắt|"
+    r"so sánh|tiền tố|hậu tố|thì|ngôi thứ|biến thể|lối viết|cách viết|"
+    r"phiên âm|tham khảo|của từ|tên khoa học|cũng|như|một dạng)\b",
+    re.I,
+)
+valid_word = re.compile(r"[A-Za-z]+(?:[ -][A-Za-z]+)*\Z")
 
-for line in (root / "tools" / "quiz_words.tsv").read_text(encoding="utf-8").splitlines():
-    if not line or line.startswith("#"):
+
+def playable_answer(value):
+    value = value.strip(" .;:!?-\"'")
+    words = value.split()
+    if not value or len(value) > 24 or len(words) > 4 or any(len(w) > 12 for w in words):
+        return None
+    if re.search(r"\d|[A-Za-z]{12,}", value) or not any(ord(c) > 127 for c in value):
+        return None
+    return value.casefold()
+
+
+pronunciations = {}
+for word, ipa in db.execute("""select w.word, p.ipa from words w
+    join pronunciations p on p.word_id = w.id
+    where w.lang_code = 'en' order by p.id"""):
+    if word not in pronunciations and ipa.startswith("/") and ipa.endswith("/") and not ipa.startswith("/.") and len(ipa) < 90:
+        pronunciations[word] = ipa
+
+for word, definition in db.execute("""select w.word, d.definition from words w
+    join word_definitions wd on wd.word_id = w.id
+    join definitions d on d.id = wd.definition_id
+    where w.lang_code = 'en' and d.definition_lang = 'vi'
+    order by wd.id"""):
+    if word in entries or word not in pronunciations or not 2 <= len(word) <= 20 or not valid_word.fullmatch(word):
         continue
-    word, answers = line.split("\t")
-    answer, *aliases = answers.split("|")
-    rows = db.execute("""select d.definition from words w
-        join word_definitions wd on wd.word_id = w.id
-        join definitions d on d.id = wd.definition_id
-        where w.word = ? and w.lang_code = 'en' and d.definition_lang = 'vi'""", (word,)).fetchall()
-    definitions = [" " + normalize(row[0]) + " " for row in rows]
-    if not any(" " + normalize(answer) + " " in definition for definition in definitions):
-        missing.append(word)
+    definition = re.sub(r"\[[^]]*\]|\([^)]*\)", "", definition).split("(", 1)[0].strip()
+    if skip_definition.match(definition):
         continue
-    ipa = db.execute("""select p.ipa from words w join pronunciations p on p.word_id = w.id
-        where w.word = ? and w.lang_code = 'en' and p.ipa like '/%/'
-        order by p.id limit 1""", (word,)).fetchone()
-    entries.append({"word": word, "phonetic": ipa_overrides.get(word, ipa[0] if ipa else ""), "answer": answer, "aliases": aliases})
+    first_sentence = definition.split(".", 1)[0].split(";", 1)[0]
+    answers = []
+    for phrase in first_sentence.split(",")[:5]:
+        answer = playable_answer(phrase)
+        if answer and answer not in answers:
+            answers.append(answer)
+    if not answers:
+        continue
+    entries[word] = {"word": word, "phonetic": pronunciations[word], "answer": answers[0], "aliases": answers[1:4]}
 
-assert len(entries) >= 80, f"Only {len(entries)} verified entries; missing: {missing}"
-assert all(entry["phonetic"] and not entry["phonetic"].startswith("/.") for entry in entries)
-(root / "dist" / "words.js").write_text(
-    "// Derived from minhqnd/dictionary v2.0.0, CC BY-SA 4.0.\nexport const WORDS=" + json.dumps(entries, ensure_ascii=False, separators=(",", ":")) + ";\n",
+items = list(entries.values())
+output.write_text(
+    "// Derived from minhqnd/dictionary v2.0.0, CC BY-SA 4.0.\n"
+    "export const WORDS=" + json.dumps(items, ensure_ascii=False, separators=(",", ":")) + ";\n",
     encoding="utf-8",
 )
-print(f"Wrote {len(entries)} verified words. Unmatched: {', '.join(missing) or 'none'}")
+print(f"Wrote {len(items):,} playable words to {output}.")
