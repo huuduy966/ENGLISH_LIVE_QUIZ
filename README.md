@@ -2,7 +2,7 @@
 
 Trang dọc dành cho TikTok LIVE. Người xem bình luận nghĩa tiếng Việt của từ tiếng Anh; mỗi người được một điểm cho mỗi vòng trả lời đúng. Cầu nối giữ vòng chơi và bảng xếp hạng đồng bộ giữa trang điều khiển và trang hiển thị.
 
-Bộ 46.050 từ chơi được lấy từ các mục tiếng Anh có nghĩa tiếng Việt ngắn và phiên âm trong [minhqnd/dictionary](https://github.com/minhqnd/dictionary). Bộ 124 từ đã kiểm tra thủ công vẫn được giữ nguyên. Những dòng chỉ dẫn như “xem từ khác”, dạng chia động từ và đáp án quá dài được loại khỏi trò chơi. Xem [DATA-LICENSE.md](DATA-LICENSE.md) để biết nguồn và giấy phép dữ liệu. Để tạo lại danh sách từ, tải `dictionary.db` của bản phát hành v2.0.0 rồi chạy `python tools/build_dictionary.py đường-dẫn-dictionary.db`.
+Bộ từ chơi được lấy từ các mục tiếng Anh có nghĩa tiếng Việt ngắn và phiên âm trong [minhqnd/dictionary](https://github.com/minhqnd/dictionary). Bộ 124 từ đã kiểm tra thủ công vẫn được giữ nguyên. Những dòng chỉ dẫn như “xem từ khác”, dạng chia động từ, đáp án quá dài và từ tiếng Anh lỗi hoặc cực hiếm được loại khỏi trò chơi. Xem [DATA-LICENSE.md](DATA-LICENSE.md) để biết nguồn và giấy phép dữ liệu. Để tạo lại danh sách từ, tải `dictionary.db` của bản phát hành v2.0.0, chạy `python -m pip install -r tools/requirements.txt` rồi `python tools/build_dictionary.py đường-dẫn-dictionary.db`.
 
 ## Chạy trên máy phát stream
 

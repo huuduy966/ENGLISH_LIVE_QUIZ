@@ -7,6 +7,7 @@ import re
 import sqlite3
 import sys
 from pathlib import Path
+from wordfreq import zipf_frequency
 
 root = Path(__file__).resolve().parents[1]
 db = sqlite3.connect(sys.argv[1])
@@ -46,7 +47,7 @@ for word, definition in db.execute("""select w.word, d.definition from words w
     join definitions d on d.id = wd.definition_id
     where w.lang_code = 'en' and d.definition_lang = 'vi'
     order by wd.id"""):
-    if word in entries or word not in pronunciations or not 2 <= len(word) <= 20 or not valid_word.fullmatch(word):
+    if word in entries or word not in pronunciations or not 2 <= len(word) <= 20 or not valid_word.fullmatch(word) or zipf_frequency(word, "en") < 1.5:
         continue
     definition = re.sub(r"\[[^]]*\]|\([^)]*\)", "", definition).split("(", 1)[0].strip()
     if skip_definition.match(definition):
