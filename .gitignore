@@ -1,3 +1,8 @@
 node_modules/
 .env
 excluded-words.json
+tools/translation_cache_20k.json
+tools/dictionary-source.db
+tools/vocabulary_review.json
+__pycache__/
+*.pyc

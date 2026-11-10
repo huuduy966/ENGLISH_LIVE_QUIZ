@@ -1,145 +1,174 @@
-"""Generate 20,000 natural colloquial Vietnamese vocabulary entries.
+"""Generate 20,000 natural colloquial Vietnamese vocabulary entries using batch translation.
 
 Usage: python tools/generate_natural_meanings.py
 """
 import json
 import re
-import sqlite3
+import time
+import urllib.parse
+import urllib.request
 from pathlib import Path
-import wordfreq
 
 root = Path(__file__).resolve().parents[1]
-db_path = root / "tools" / "dictionary-source.db"
-curated_source = root / "tools" / "curated_words.json"
+candidates_path = root / "tools" / "candidates_20k.json"
+curated_path = root / "tools" / "curated_words.json"
 overrides_path = root / "tools" / "meaning_overrides.json"
+cache_path = root / "tools" / "translation_cache_20k.json"
 output_path = root / "tools" / "curated_words_20k.json"
 
-if not db_path.exists():
-    raise FileNotFoundError(f"Database not found at {db_path}")
+if not candidates_path.exists():
+    raise FileNotFoundError(f"Candidates file not found at {candidates_path}")
 
-conn = sqlite3.connect(db_path)
-cursor = conn.cursor()
-
-word_pattern = re.compile(r"^[a-z]{2,16}$")
-skip_prefix = re.compile(
-    r"^(?:xem|số nhiều|quá khứ|động từ|dạng|viết tắt|từ viết tắt|so sánh|tiền tố|hậu tố|thì|ngôi|biến thể|cách viết|phiên âm|tham khảo|của từ|tên khoa học|như|cũng như)\b",
-    re.I,
-)
-clean_paren = re.compile(r"\([^)]*\)|\[[^]]*\]|\{[^}]*\}")
-clean_junk_prefix = re.compile(r"^(?:sự|việc|hành động|tính chất|tính|lối|thói)\s+", re.I)
-junk_pattern = re.compile(r"^(?:sự|hành động|dạng quá khứ|từ viết tắt)\b", re.I)
-junk_standalone = {"sự", "việc", "hành động", "tính chất", "tính", "dạng", "lối", "thói"}
-
-
-def extract_clean_phrases(raw_defs):
-    found = []
-    for d in raw_defs:
-        d = clean_paren.sub("", d).strip()
-        for sentence in re.split(r"[.;\n]+", d):
-            sentence = sentence.strip()
-            if not sentence or skip_prefix.match(sentence):
-                continue
-            for phrase in re.split(r"[,/]+", sentence):
-                phrase = phrase.strip(" .;:!?-\"'")
-                cleaned = clean_junk_prefix.sub("", phrase).strip()
-                for p in [cleaned, phrase]:
-                    if (
-                        p
-                        and p.lower() not in junk_standalone
-                        and not clean_junk_prefix.match(p)
-                        and not junk_pattern.search(p)
-                        and 1 <= len(p) <= 25
-                        and len(p.split()) <= 4
-                        and re.fullmatch(r"[^\W\d_]+(?:[ -][^\W\d_]+)*", p)
-                    ):
-                        p_lower = p.lower()
-                        if p_lower not in found:
-                            found.append(p_lower)
-    return found
-
-
-print("Querying dictionary-source.db for English words, IPA and definitions...")
-query = """
-    SELECT lower(w.word), p.ipa, d.definition
-    FROM words w
-    JOIN pronunciations p ON p.word_id = w.id
-    JOIN word_definitions wd ON wd.word_id = w.id
-    JOIN definitions d ON d.id = wd.definition_id
-    WHERE w.lang_code = 'en' AND d.definition_lang = 'vi' AND p.ipa LIKE '/%/'
-"""
-
-words_found = {}
-for w, ipa, defn in cursor.execute(query):
-    if word_pattern.fullmatch(w) and ipa.startswith("/") and ipa.endswith("/") and len(ipa) < 80:
-        if w not in words_found:
-            words_found[w] = {"ipa": ipa, "defs": []}
-        if len(words_found[w]["defs"]) < 6:
-            words_found[w]["defs"].append(defn)
-
-curated_list = json.loads(curated_source.read_text(encoding="utf-8"))
+candidates = json.loads(candidates_path.read_text(encoding="utf-8"))
+curated_list = json.loads(curated_path.read_text(encoding="utf-8"))
 overrides = json.loads(overrides_path.read_text(encoding="utf-8"))
 
-candidates = []
-seen = set()
+curated_map = {item["word"]: item for item in curated_list}
 
-# 1. Incorporate hand-curated baseline entries
-for item in curated_list:
-    w = item["word"]
-    seen.add(w)
-    ans = overrides.get(w, item["answer"])
-    # Clean answer and aliases if needed
-    if junk_pattern.search(ans):
-        ans = clean_junk_prefix.sub("", ans).strip()
-    raw_aliases = [] if w in overrides else item.get("aliases", [])
-    aliases = [
-        clean_junk_prefix.sub("", a).strip()
-        for a in raw_aliases
-        if not junk_pattern.search(clean_junk_prefix.sub("", a).strip())
-    ]
-    candidates.append({
+# Load or initialize translation cache
+cache = {}
+if cache_path.exists():
+    try:
+        cache = json.loads(cache_path.read_text(encoding="utf-8"))
+        print(f"Loaded {len(cache)} cached translations.")
+    except Exception:
+        cache = {}
+
+words_to_translate = [c["word"] for c in candidates if c["word"] not in cache]
+print(f"Need to translate {len(words_to_translate)} words...")
+
+batch_size = 80
+clean_junk_prefix = re.compile(r"^(?:sự|việc|hành động|tính chất|tính|lối|thói)\s+", re.I)
+
+for i in range(0, len(words_to_translate), batch_size):
+    batch = words_to_translate[i : i + batch_size]
+    batch_text = "\n".join(batch)
+    url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q={urllib.parse.quote(batch_text)}"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+
+    success = False
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=12) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                full_trans = "".join(segment[0] for segment in data[0])
+                lines = [line.strip() for line in full_trans.split("\n")]
+                # Handle possible line count mismatch
+                if len(lines) == len(batch):
+                    for w, t in zip(batch, lines):
+                        cache[w] = t
+                else:
+                    # Fallback single word if count mismatches
+                    for w in batch:
+                        single_url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q={urllib.parse.quote(w)}"
+                        sreq = urllib.request.Request(single_url, headers={"User-Agent": "Mozilla/5.0"})
+                        with urllib.request.urlopen(sreq, timeout=5) as sresp:
+                            sdata = json.loads(sresp.read().decode("utf-8"))
+                            cache[w] = sdata[0][0][0].strip()
+                success = True
+                break
+        except Exception as e:
+            time.sleep(1.0 * (attempt + 1))
+
+    if (i // batch_size) % 10 == 0 or i + batch_size >= len(words_to_translate):
+        print(f"Progress: {min(i + batch_size, len(words_to_translate))}/{len(words_to_translate)} words translated.")
+        cache_path.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
+
+    time.sleep(0.08)
+
+# Save final cache
+cache_path.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
+print("All translations completed.")
+
+# Build final natural vocabulary list
+SPECIFIC_OVERRIDES = {
+    "act": ("diễn xuất", ["hành động", "diễn"]),
+    "action": ("hoạt động", ["hành động"]),
+    "actions": ("hoạt động", []),
+    "acronym": ("viết tắt", ["từ viết tắt"]),
+    "zionist": ("người phục quốc", ["phục quốc do thái"]),
+    "anarchist": ("người vô chính phủ", []),
+    "impressionist": ("phái ấn tượng", []),
+    "globalist": ("người toàn cầu hóa", []),
+    "traditionalist": ("người truyền thống", []),
+    "expansionist": ("người bành trướng", []),
+}
+
+def clean_meaning(text):
+    text = text.strip(" .;:!?-\"'")
+    text = clean_junk_prefix.sub("", text).strip()
+    if "(" in text:
+        text = re.sub(r"\(.*?\)", "", text).strip()
+    if len(text) > 30 and "," in text:
+        text = text.split(",")[0].strip()
+    if len(text) > 30 and " người theo chủ nghĩa " in text:
+        text = text.replace(" người theo chủ nghĩa ", " người ").strip()
+    if len(text) > 30:
+        words = text.split()
+        text = " ".join(words[:4])
+    return text.lower()
+
+
+def make_aliases(word, answer):
+    aliases = []
+    # Classifiers: 'cái ghế' -> 'ghế', 'con mèo' -> 'mèo', 'quả táo' -> 'táo'
+    for prefix in ["cái ", "con ", "quả ", "trái ", "ngôi ", "ngọn ", "cuốn ", "quyển ", "chiếc ", "bức "]:
+        if answer.startswith(prefix):
+            short = answer[len(prefix) :].strip()
+            if short and short != answer and short not in aliases:
+                aliases.append(short)
+
+    if word == "support":
+        for a in ["ủng hộ", "giúp đỡ"]:
+            if a != answer and a not in aliases:
+                aliases.append(a)
+    elif word in curated_map:
+        for a in curated_map[word].get("aliases", []):
+            a_clean = clean_meaning(a)
+            if a_clean and a_clean != answer and a_clean not in aliases and len(a_clean) <= 20:
+                aliases.append(a_clean)
+    return aliases[:3]
+
+
+final_items = []
+for c in candidates:
+    w = c["word"]
+    ipa = c["phonetic"]
+
+    # 0. Specific clean overrides
+    if w in SPECIFIC_OVERRIDES:
+        ans, als = SPECIFIC_OVERRIDES[w]
+    # 1. Overrides take precedence
+    elif w in overrides:
+        ans = clean_meaning(overrides[w])
+        als = make_aliases(w, ans)
+    # 2. Curated words baseline
+    elif w in curated_map:
+        ans = clean_meaning(curated_map[w]["answer"])
+        als = make_aliases(w, ans)
+    # 3. Translated meaning
+    else:
+        raw_trans = cache.get(w, "")
+        ans = clean_meaning(raw_trans)
+        if not ans or not re.fullmatch(r"[^\W\d_]+(?:[ -][^\W\d_]+)*", ans):
+            defs = c.get("definitions", [])
+            ans = clean_meaning(defs[0]) if defs else w
+            if not ans or not re.fullmatch(r"[^\W\d_]+(?:[ -][^\W\d_]+)*", ans):
+                ans = w
+        als = make_aliases(w, ans)
+
+    final_items.append({
         "word": w,
-        "phonetic": item["phonetic"],
+        "phonetic": ipa,
         "answer": ans,
-        "aliases": [a for a in aliases if a and a != ans]
+        "aliases": als
     })
 
-# 2. Extract and score definitions from SQLite database
-db_candidates = []
-for w, data in words_found.items():
-    if w in seen:
-        continue
-    phrases = extract_clean_phrases(data["defs"])
-    if phrases:
-        freq = round(wordfreq.zipf_frequency(w, "en"), 2)
-        # Prioritize phrases by frequency in Vietnamese (colloquial usage)
-        phrases.sort(key=lambda p: -wordfreq.zipf_frequency(p, "vi"))
-        ans = overrides.get(w, phrases[0])
-        aliases = [] if w in overrides else [p for p in phrases[1:4] if p != ans]
-        db_candidates.append({
-            "word": w,
-            "phonetic": data["ipa"],
-            "answer": ans,
-            "aliases": aliases,
-            "frequency": freq
-        })
-
-# Sort by English frequency descending, then alphabetically
-db_candidates.sort(key=lambda x: (-x["frequency"], x["word"]))
-
-needed = 20000 - len(candidates)
-for item in db_candidates[:needed]:
-    candidates.append({
-        "word": item["word"],
-        "phonetic": item["phonetic"],
-        "answer": item["answer"],
-        "aliases": item["aliases"]
-    })
-
-print(f"Generated {len(candidates)} clean colloquial entries.")
+print(f"Generated {len(final_items)} final entries.")
 
 output_path.write_text(
-    json.dumps(candidates, ensure_ascii=False, indent=2),
+    json.dumps(final_items, ensure_ascii=False, indent=2),
     encoding="utf-8"
 )
 
-print(f"Wrote {len(candidates)} entries to {output_path}.")
+print(f"Saved to {output_path}.")
