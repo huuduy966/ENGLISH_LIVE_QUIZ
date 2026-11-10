@@ -49,6 +49,14 @@
     ]
   },
   {
+    "word": "peaceful",
+    "phonetic": "/ˈpis.fəl/",
+    "answer": "yên bình",
+    "aliases": [
+      "thanh bình"
+    ]
+  },
+  {
     "word": "improve",
     "phonetic": "/ɪm.ˈpruːv/",
     "answer": "cải thiện",
@@ -61,6 +69,14 @@
     "phonetic": "/ə.ˈtʃiv/",
     "answer": "đạt được",
     "aliases": []
+  },
+  {
+    "word": "challenge",
+    "phonetic": "/ˈt͡ʃæl.ɪnd͡ʒ/",
+    "answer": "thử thách",
+    "aliases": [
+      "thách thức"
+    ]
   },
   {
     "word": "discover",
@@ -82,6 +98,20 @@
     "answer": "hành trình",
     "aliases": [
       "chuyến đi"
+    ]
+  },
+  {
+    "word": "opportunity",
+    "phonetic": "/ˌɑːpərˈtuːnəti/",
+    "answer": "cơ hội",
+    "aliases": []
+  },
+  {
+    "word": "confidence",
+    "phonetic": "/ˈkɑːn.fə.dənts/",
+    "answer": "sự tự tin",
+    "aliases": [
+      "tự tin"
     ]
   },
   {
@@ -111,6 +141,12 @@
     "aliases": [
       "trí nhớ"
     ]
+  },
+  {
+    "word": "wonderful",
+    "phonetic": "/ˈwən.dɜː.fəl/",
+    "answer": "tuyệt vời",
+    "aliases": []
   },
   {
     "word": "apple",
@@ -179,6 +215,12 @@
     "aliases": []
   },
   {
+    "word": "onion",
+    "phonetic": "/ˈən.jən/",
+    "answer": "hành tây",
+    "aliases": []
+  },
+  {
     "word": "bread",
     "phonetic": "/bɹɛd/",
     "answer": "bánh mì",
@@ -188,6 +230,12 @@
     "word": "butter",
     "phonetic": "/ˈbʌtəɹ/",
     "answer": "bơ",
+    "aliases": []
+  },
+  {
+    "word": "cheese",
+    "phonetic": "/t͡ʃiːz/",
+    "answer": "phô mai",
     "aliases": []
   },
   {
@@ -311,6 +359,12 @@
     "aliases": []
   },
   {
+    "word": "family",
+    "phonetic": "/ˈfæməli/",
+    "answer": "gia đình",
+    "aliases": []
+  },
+  {
     "word": "mother",
     "phonetic": "/ˈmə.ðɜː/",
     "answer": "mẹ",
@@ -324,6 +378,30 @@
     "answer": "cha",
     "aliases": [
       "bố"
+    ]
+  },
+  {
+    "word": "brother",
+    "phonetic": "/ˈbrə.ðɜː/",
+    "answer": "anh trai",
+    "aliases": [
+      "em trai"
+    ]
+  },
+  {
+    "word": "sister",
+    "phonetic": "/ˈsɪs.tɜː/",
+    "answer": "chị gái",
+    "aliases": [
+      "em gái"
+    ]
+  },
+  {
+    "word": "friend",
+    "phonetic": "/fɹɛnd/",
+    "answer": "người bạn",
+    "aliases": [
+      "bạn"
     ]
   },
   {
@@ -383,6 +461,14 @@
     "phonetic": "/ˈfɑːr.mɜː/",
     "answer": "nông dân",
     "aliases": []
+  },
+  {
+    "word": "driver",
+    "phonetic": "/ˈdraɪvər/",
+    "answer": "tài xế",
+    "aliases": [
+      "người lái xe"
+    ]
   },
   {
     "word": "school",
@@ -479,6 +565,12 @@
     ]
   },
   {
+    "word": "bedroom",
+    "phonetic": "/ˈbed.rʊm/",
+    "answer": "phòng ngủ",
+    "aliases": []
+  },
+  {
     "word": "mirror",
     "phonetic": "/ˈmɪr.ɜː/",
     "answer": "gương",
@@ -495,6 +587,14 @@
     ]
   },
   {
+    "word": "letter",
+    "phonetic": "/ˈlɛtə/",
+    "answer": "lá thư",
+    "aliases": [
+      "chữ cái"
+    ]
+  },
+  {
     "word": "pencil",
     "phonetic": "/ˈpen.səl/",
     "answer": "bút chì",
@@ -504,6 +604,12 @@
     "word": "paper",
     "phonetic": "/ˈpeɪpə/",
     "answer": "giấy",
+    "aliases": []
+  },
+  {
+    "word": "music",
+    "phonetic": "/ˈmjuːzɪk/",
+    "answer": "âm nhạc",
     "aliases": []
   },
   {
@@ -657,6 +763,14 @@
     ]
   },
   {
+    "word": "arrive",
+    "phonetic": "/ə.ˈrɑɪv/",
+    "answer": "đến nơi",
+    "aliases": [
+      "đến"
+    ]
+  },
+  {
     "word": "return",
     "phonetic": "/rɪ.ˈtɜːn/",
     "answer": "trở về",
@@ -671,6 +785,12 @@
     "aliases": [
       "đợi"
     ]
+  },
+  {
+    "word": "search",
+    "phonetic": "/ˈsɜːtʃ/",
+    "answer": "tìm kiếm",
+    "aliases": []
   },
   {
     "word": "find",
@@ -695,9 +815,10 @@
   {
     "word": "support",
     "phonetic": "/sə.ˈpɔrt/",
-    "answer": "ủng hộ",
+    "answer": "hỗ trợ",
     "aliases": [
-      "hỗ trợ"
+      "ủng hộ",
+      "giúp đỡ"
     ]
   },
   {
@@ -719,6 +840,14 @@
     "phonetic": "/ˈhoʊp/",
     "answer": "hy vọng",
     "aliases": []
+  },
+  {
+    "word": "enjoy",
+    "phonetic": "/ɪnˈd͡ʒɔɪ/",
+    "answer": "thưởng thức",
+    "aliases": [
+      "tận hưởng"
+    ]
   },
   {
     "word": "happy",
@@ -748,6 +877,14 @@
     "answer": "bình tĩnh",
     "aliases": [
       "yên tĩnh"
+    ]
+  },
+  {
+    "word": "quiet",
+    "phonetic": "/ˈkwaɪət/",
+    "answer": "yên lặng",
+    "aliases": [
+      "im lặng"
     ]
   },
   {
@@ -795,6 +932,14 @@
     ]
   },
   {
+    "word": "easy",
+    "phonetic": "/ˈiːzi/",
+    "answer": "dễ dàng",
+    "aliases": [
+      "dễ"
+    ]
+  },
+  {
     "word": "important",
     "phonetic": "/ɪm.ˈpɔr.tənt/",
     "answer": "quan trọng",
@@ -823,6 +968,12 @@
     "aliases": []
   },
   {
+    "word": "useful",
+    "phonetic": "/ˈjuːs.fəl/",
+    "answer": "hữu ích",
+    "aliases": []
+  },
+  {
     "word": "famous",
     "phonetic": "/ˈfeɪ.məs/",
     "answer": "nổi tiếng",
@@ -838,6 +989,18 @@
     "word": "popular",
     "phonetic": "/ˈpɑː.pjə.lɜː/",
     "answer": "phổ biến",
+    "aliases": []
+  },
+  {
+    "word": "healthy",
+    "phonetic": "/ˈhɛlθi/",
+    "answer": "khỏe mạnh",
+    "aliases": []
+  },
+  {
+    "word": "friendly",
+    "phonetic": "/ˈfrɛndli/",
+    "answer": "thân thiện",
     "aliases": []
   },
   {
@@ -863,6 +1026,12 @@
     ]
   },
   {
+    "word": "early",
+    "phonetic": "/ˈɜːrli/",
+    "answer": "sớm",
+    "aliases": []
+  },
+  {
     "word": "late",
     "phonetic": "/ˈleɪt/",
     "answer": "muộn",
@@ -880,6 +1049,12 @@
     "word": "never",
     "phonetic": "/ˈnɛv.ə(ɹ)/",
     "answer": "không bao giờ",
+    "aliases": []
+  },
+  {
+    "word": "often",
+    "phonetic": "/ˈɔ.fən/",
+    "answer": "thường xuyên",
     "aliases": []
   },
   {
