@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { TikTokLiveConnection, WebcastEvent } from 'tiktok-live-connector';
-import { WORDS } from './dist/words.js';
+import { WORDS, WORD_SET_ID } from './dist/words.js';
 
 const port = Number(process.env.PORT || 3000);
 const relayPort = Number(process.env.RELAY_PORT || 3002);
@@ -35,7 +35,7 @@ let answered = new Set();
 let comments = [];
 let count = 0;
 const normalize = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-const game = () => ({ type: 'game', wordIndex, clue: meanings[WORDS[wordIndex].word] || WORDS[wordIndex].answer, round, shown, startedAt, revealedAt, leaders, comments, count, username, connected, serverTime: Date.now() });
+const game = () => ({ type: 'game', wordSetId: WORD_SET_ID, wordIndex, clue: meanings[WORDS[wordIndex].word] || WORDS[wordIndex].answer, round, shown, startedAt, revealedAt, leaders, comments, count, username, connected, serverTime: Date.now() });
 
 function nextRound() {
   const previous = wordIndex;
